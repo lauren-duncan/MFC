@@ -484,6 +484,12 @@ contains
 
         end if
 
+        if (reservoir) then
+            q_prim_vf(lam_idx)%sf(j, k, l) = &
+            (eta*patch_icpp(patch_id)%Lambda &
+             + (1d0 - eta)*orig_prim_vf(lam_idx))
+        end if
+
         if (mpp_lim .and. bubbles) then
             !adjust volume fractions, according to modeled gas void fraction
             alf_sum%sf = 0d0

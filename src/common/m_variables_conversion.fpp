@@ -1013,6 +1013,11 @@ contains
                         end do
                     end if
 
+
+                    if (reservoir) then
+                        qK_prim_vf(lam_idx)%sf(j,k,l) = qK_cons_vf(lam_idx)%sf(j, k, l)/qK_cons_vf(1)%sf(j, k, l)
+                    end if 
+
                     !$acc loop seq
                     do i = advxb, advxe
                         qK_prim_vf(i)%sf(j, k, l) = qK_cons_vf(i)%sf(j, k, l)
@@ -1182,6 +1187,10 @@ contains
                         do i = xibeg, xiend
                             q_cons_vf(i)%sf(j, k, l) = rho*q_prim_vf(i)%sf(j, k, l)
                         end do
+                    end if
+
+                    if (reservoir) then
+                        qK_cons_vf(lam_idx)%sf(j,k,l) = qK_prim_vf(lam_idx)%sf(j, k, l)*qK_prim_vf(1)%sf(j, k, l)
                     end if
 
                     if (.not. f_is_default(sigma)) then

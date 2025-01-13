@@ -88,6 +88,7 @@ module m_global_parameters
     integer :: num_fluids      !< Number of different fluids present in the flow
     logical :: relax           !< phase change
     integer :: relax_model     !< Phase change relaxation model
+    logical :: reservoir       !< phase change: latent heat reservoir method
     logical :: mpp_lim         !< Maximum volume fraction limiter
     integer :: sys_size        !< Number of unknowns in the system of equations
     integer :: weno_order      !< Order of accuracy for the WENO reconstruction
@@ -115,6 +116,7 @@ module m_global_parameters
     type(int_bounds_info) :: stress_idx            !< Indices of elastic stresses
     type(int_bounds_info) :: xi_idx                !< Indexes of first and last reference map eqns.
     integer :: c_idx                               !< Index of color function
+    integer :: lam_idx                             !< Index of latent heat reservoir advection eqn.
     !> @}
 
     !> @name Boundary conditions in the x-, y- and z-coordinate directions
@@ -293,6 +295,7 @@ contains
         alt_soundspeed = .false.
         relax = .false.
         relax_model = dflt_int
+        reservoir = .false.
 
         hypoelasticity = .false.
         hyperelasticity = .false.
@@ -515,6 +518,11 @@ contains
                 tensor_size = num_dims**2 + 1
             end if
 
+            if (reservoir) then
+                lam_idx = sys_size + 1
+                sys_size = c_idx
+            end if
+
             if (.not. f_is_default(sigma)) then
                 c_idx = sys_size + 1
                 sys_size = c_idx
@@ -556,6 +564,11 @@ contains
                 ! number of entries in the symmetric btensor plus the jacobian
                 b_size = (num_dims*(num_dims + 1))/2 + 1
                 tensor_size = num_dims**2 + 1
+            end if
+
+            if (reservoir) then
+                lam_idx = sys_size + 1
+                sys_size = c_idx
             end if
 
             if (.not. f_is_default(sigma)) then

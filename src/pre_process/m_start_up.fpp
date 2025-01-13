@@ -33,6 +33,8 @@ module m_start_up
 
     use m_phase_change          !< Phase-change module
 
+    use m_latent_heat_reservoir !< Latent heat reservoir module
+
     use m_helper_basic          !< Functions to compare floating point numbers
 
     use m_helper
@@ -140,7 +142,7 @@ contains
             polydisperse, poly_sigma, qbmm, &
             sigR, sigV, dist_type, rhoRV, R0_type, &
             file_per_process, relax, relax_model, &
-            palpha_eps, ptgalpha_eps, ib, num_ibs, patch_ib, &
+            palpha_eps, ptgalpha_eps, reservoir, ib, num_ibs, patch_ib, &
             sigma, adv_n, hyperelasticity, pre_stress
 
         ! Inquiring the status of the pre_process.inp file
@@ -781,6 +783,7 @@ contains
         call s_initialize_perturbation_module()
         call s_initialize_assign_variables_module()
         if (relax) call s_initialize_phasechange_module()
+        if (reservoir) call s_initialize_reservoir_module()
 
         ! Associate pointers for serial or parallel I/O
         if (parallel_io .neqv. .true.) then
@@ -849,6 +852,15 @@ contains
             end if
 
             call s_infinite_relaxation_k(q_cons_vf)
+        end if
+
+        if (reservoir) then
+            if (proc_rank == 0) then
+                print *, 'initial condition might have been altered due to enforcement of &
+&                 latent heat reservoir method'
+            end if
+
+            call s_latent_heat_reservoir(q_cons_vf, q_prim_vf)
         end if
 
         call s_write_data_files(q_cons_vf, ib_markers)

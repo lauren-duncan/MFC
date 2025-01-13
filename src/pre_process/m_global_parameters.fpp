@@ -75,6 +75,7 @@ module m_global_parameters
     integer :: model_eqns      !< Multicomponent flow model
     logical :: relax           !< activate phase change
     integer :: relax_model     !< Relax Model
+    logical :: reservoir       !< activate latent heat reservoir method
     real(kind(0d0)) :: palpha_eps     !< trigger parameter for the p relaxation procedure, phase change model
     real(kind(0d0)) :: ptgalpha_eps   !< trigger parameter for the pTg relaxation procedure, phase change model
     integer :: num_fluids      !< Number of different fluids present in the flow
@@ -102,6 +103,7 @@ module m_global_parameters
     type(int_bounds_info) :: stress_idx            !< Indexes of elastic shear stress eqns.
     type(int_bounds_info) :: xi_idx                !< Indexes of first and last reference map eqns.
     integer :: c_idx                               !< Index of the color function
+    integer :: lam_idx                             !< Index of the latent heat reservoir advection eqn.
 
     type(int_bounds_info) :: bc_x, bc_y, bc_z !<
     !! Boundary conditions in the x-, y- and z-coordinate directions
@@ -283,6 +285,7 @@ contains
         relax_model = dflt_int
         palpha_eps = dflt_real
         ptgalpha_eps = dflt_real
+        reservoir = .false.
         num_fluids = dflt_int
         weno_order = dflt_int
 
@@ -373,6 +376,8 @@ contains
             patch_icpp(i)%m0 = dflt_real
 
             patch_icpp(i)%hcid = dflt_int
+
+            patch_icpp(i)%Lambda = 0d0
         end do
 
         ! Tait EOS
@@ -618,6 +623,11 @@ contains
                 sys_size = xi_idx%end + 1
             end if
 
+            if (reservoir) then
+                lam_idx = sys_size + 1
+                sys_size = c_idx
+            end if
+
             if (.not. f_is_default(sigma)) then
                 c_idx = sys_size + 1
                 sys_size = c_idx
@@ -658,6 +668,11 @@ contains
                 xi_idx%end = sys_size + num_dims
                 ! adding three more equations for the \xi field and the elastic energy
                 sys_size = xi_idx%end + 1
+            end if
+
+            if (reservoir) then
+                lam_idx = sys_size + 1
+                sys_size = c_idx
             end if
 
             if (.not. f_is_default(sigma)) then

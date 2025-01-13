@@ -52,6 +52,8 @@ module m_start_up
 
     use m_phase_change          !< Phase-change module
 
+    use m_latent_heat_reservoir !< Latent heat reservoir module
+
     use m_viscous
 
     use m_bubbles
@@ -159,7 +161,7 @@ contains
             integral, integral_wrt, num_integrals, &
             polydisperse, poly_sigma, qbmm, &
             relax, relax_model, &
-            palpha_eps, ptgalpha_eps, &
+            palpha_eps, ptgalpha_eps, reservoir, &
             R0_type, file_per_process, sigma, &
             pi_fac, adv_n, adap_dt, bf_x, bf_y, bf_z, &
             k_x, k_y, k_z, w_x, w_y, w_z, p_x, p_y, p_z, &
@@ -1120,6 +1122,7 @@ contains
             call s_strang_splitting(t_step, time_avg)
         end if
         if (relax) call s_infinite_relaxation_k(q_cons_ts(1)%vf)
+        if (reservoir) call s_latent_heat_reservoir(q_cons_ts(1)%vf, q_prim_ts(1)%vf)
         ! Time-stepping loop controls
         if ((mytime + dt) >= finaltime) dt = finaltime - mytime
         t_step = t_step + 1
@@ -1282,6 +1285,7 @@ contains
 #endif
 
         if (relax) call s_initialize_phasechange_module()
+        if (reservoir) call s_initialize_reservoir_module()
         call s_initialize_data_output_module()
         call s_initialize_derived_variables_module()
         call s_initialize_time_steppers_module()
@@ -1426,6 +1430,7 @@ contains
         if (relax) then
             !$acc update device(palpha_eps, ptgalpha_eps)
         end if
+        !$acc update device(reservoir)
 
         if (ib) then
             !$acc update device(ib_markers%sf)
@@ -1452,6 +1457,7 @@ contains
         call s_finalize_mpi_proxy_module()
         call s_finalize_global_parameters_module()
         if (relax) call s_finalize_relaxation_solver_module()
+        if (reservoir) call s_finalize_reservoir_solver_module()
         if (any(Re_size > 0)) then
             call s_finalize_viscous_module()
         end if

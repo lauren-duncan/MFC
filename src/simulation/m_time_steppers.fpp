@@ -201,6 +201,13 @@ contains
             end do
         end if
 
+        if (reservoir) then
+            @:ALLOCATE(q_prim_vf(lam_idx)%sf(ix_t%beg:ix_t%end, &
+                iy_t%beg:iy_t%end, &
+                iz_t%beg:iz_t%end))
+            @:ACC_SETUP_SFs(q_prim_vf(lam_idx))
+        end if
+
         if (model_eqns == 3) then
             do i = internalEnergies_idx%beg, internalEnergies_idx%end
                 @:ALLOCATE(q_prim_vf(i)%sf(ix_t%beg:ix_t%end, &

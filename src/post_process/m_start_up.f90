@@ -74,7 +74,7 @@ contains
             parallel_io, rhoref, pref, bubbles, qbmm, sigR, &
             R0ref, nb, polytropic, thermal, Ca, Web, Re_inv, &
             polydisperse, poly_sigma, file_per_process, relax, &
-            relax_model, cf_wrt, sigma, adv_n, ib, sim_data, &
+            relax_model, reservoir, cf_wrt, sigma, adv_n, ib, sim_data, &
             hyperelasticity
 
         ! Inquiring the status of the post_process.inp file
@@ -342,6 +342,22 @@ contains
                 end if
                 varname(:) = ' '
             end do
+        end if
+
+        ! ----------------------------------------------------------------------
+
+        ! Adding the stored latent heat to the formatted database file --------
+
+        if (reservoir) then
+            if (prim_vars_wrt) then
+                q_sf = q_prim_vf(lam_idx)%sf( &
+                       -offset_x%beg:m + offset_x%end, &
+                       -offset_y%beg:n + offset_y%end, &
+                      -offset_z%beg:p + offset_z%end)
+                write (varname, '(A)') 'Lambda'
+                call s_write_variable_to_formatted_database_file(varname, t_step)
+            end if
+            varname(:) = ' '
         end if
 
         ! ----------------------------------------------------------------------

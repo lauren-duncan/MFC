@@ -312,6 +312,8 @@ contains
         real(kind(0d0)), dimension(2) :: Re_L, Re_R
         real(kind(0d0)), dimension(3) :: xi_field_L, xi_field_R
 
+        real(kind(0d0)) :: Lambda_L, Lambda_R
+
         real(kind(0d0)) :: rho_avg
         real(kind(0d0)), dimension(num_dims) :: vel_avg
         real(kind(0d0)) :: H_avg
@@ -388,6 +390,12 @@ contains
 
                             pres_L = qL_prim_rs${XYZ}$_vf(j, k, l, E_idx)
                             pres_R = qR_prim_rs${XYZ}$_vf(j + 1, k, l, E_idx)
+
+
+                            if (reservoir) then
+                                Lambda_L = qL_prim_rs${XYZ}$_vf(j, k, l, lam_idx)*alpha_rho_L(1)
+                                Lambda_R = qR_prim_rs${XYZ}$_vf(j + 1,k, l, lam_idx)*alpha_rho_R(1)
+                            end if
 
                             rho_L = 0d0
                             gamma_L = 0d0
@@ -715,6 +723,15 @@ contains
                                     /(s_M - s_P)
                             end if
 
+                            ! Latent heat
+                            if (reservoir) then
+                                flux_rs${XYZ}$_vf(j, k, l, lam_idx) = &
+                                    (s_M*vel_R(dir_idx(1))*Lambda_R &
+                                     - s_P*vel_L(dir_idx(1))*Lambda_L &
+                                     + s_M*s_P*(Lambda_L - Lambda_R)) &
+                                    /(s_M - s_P)
+                            end if 
+
                             ! Elastic Stresses
                             if (hypoelasticity) then
                                 do i = 1, strxe - strxb + 1 !TODO: this indexing may be slow
@@ -889,6 +906,8 @@ contains
         real(kind(0d0)) :: qv_L, qv_R
         real(kind(0d0)) :: c_L, c_R
         real(kind(0d0)), dimension(2) :: Re_L, Re_R
+        real(kind(0d0)) :: Lambda_L, Lambda_R
+
 
         real(kind(0d0)) :: rho_avg
         real(kind(0d0)), dimension(num_dims) :: vel_avg
@@ -1119,6 +1138,11 @@ contains
                                     end do
                                 end if
 
+                                if (reservoir) then
+                                    Lambda_L = qL_prim_rs${XYZ}$_vf(j, k, l, lam_idx)*qL_prim_rs${XYZ}$_vf(j, k, l, 1)
+                                    Lambda_R = qR_prim_rs${XYZ}$_vf(j + 1, k, l, lam_idx)*qR_prim_rs${XYZ}$_vf(j + 1, k, l, 1)
+                                end if
+
                                 H_L = (E_L + pres_L)/rho_L
                                 H_R = (E_R + pres_R)/rho_R
 
@@ -1227,6 +1251,7 @@ contains
                                     + xi_P*(vel_R(idx1)*(E_R + pres_R) + &
                                             s_P*(xi_R*(E_R + (s_S - vel_R(idx1))*(rho_R*s_S + pres_R/(s_R - vel_R(idx1)))) - E_R))
 
+
                                 ! ELASTICITY. Elastic shear stress additions for the momentum and energy flux
                                 if (elasticity) then
                                     flux_ene_e = 0d0; 
@@ -1304,6 +1329,15 @@ contains
                                             xi_P*(s_S/(s_R - s_S))*(s_R*rho_R*xi_field_R(i) &
                                                                     - rho_R*vel_R(idx1)*xi_field_R(i))
                                     end do
+                                end if
+
+                                ! LATENT HEAT
+                                if (reservoir) then
+                                    flux_rs${XYZ}$_vf(j, k, l, lam_idx) = &
+                                            xi_M*(s_S/(s_L - s_S))*(s_L*Lambda_L &
+                                                                    - vel_L(idx1)*Lambda_L) + &
+                                            xi_P*(s_S/(s_R - s_S))*(s_R*Lambda_R &
+                                                                    - vel_R(idx1)*Lambda_R)
                                 end if
 
                                 ! SURFACE TENSION FLUX. need to check
@@ -1393,6 +1427,11 @@ contains
 
                                 pres_L = qL_prim_rs${XYZ}$_vf(j, k, l, E_idx)
                                 pres_R = qR_prim_rs${XYZ}$_vf(j + 1, k, l, E_idx)
+
+                                if (reservoir) then
+                                    Lambda_L = qL_prim_rs${XYZ}$_vf(j, k, l, lam_idx)*qL_prim_rs${XYZ}$_vf(j, k, l, 1)
+                                    Lambda_R = qR_prim_rs${XYZ}$_vf(j + 1, k, l, lam_idx)*qR_prim_rs${XYZ}$_vf(j + 1, k, l, 1)
+                                end if
 
                                 rho_L = 0d0
                                 gamma_L = 0d0
@@ -1555,6 +1594,14 @@ contains
                                             + xi_P*nbub_R*qR_prim_rs${XYZ}$_vf(j + 1, k, l, i) &
                                             *(vel_R(dir_idx(1)) + s_P*(xi_R - 1d0))
                                     end do
+                                end if
+
+                                if (reservoir) then
+                                    flux_rs${XYZ}$_vf(j, k, l, lam_idx) = &
+                                        xi_M*Lambda_L &
+                                        *(vel_L(dir_idx(1)) + s_M*(xi_L - 1d0)) &
+                                        + xi_P*Lambda_R &
+                                        *(vel_R(dir_idx(1)) + s_P*(xi_R - 1d0))
                                 end if
 
                                 ! Geometrical source flux for cylindrical coordinates
@@ -2095,6 +2142,11 @@ contains
                                 pres_L = qL_prim_rs${XYZ}$_vf(j, k, l, E_idx)
                                 pres_R = qR_prim_rs${XYZ}$_vf(j + 1, k, l, E_idx)
 
+                                if (reservoir) then
+                                    Lambda_L = qL_prim_rs${XYZ}$_vf(j, k, l, lam_idx)*qL_prim_rs${XYZ}$_vf(j, k, l, 1)
+                                    Lambda_R = qR_prim_rs${XYZ}$_vf(j + 1, k, l, lam_idx)*qR_prim_rs${XYZ}$_vf(j + 1, k, l, 1)
+                                end if
+
                                 rho_L = 0d0
                                 gamma_L = 0d0
                                 pi_inf_L = 0d0
@@ -2393,6 +2445,15 @@ contains
                                             xi_P*(s_S/(s_R - s_S))*(s_R*rho_R*tau_e_R(i) - rho_R*vel_R(idx1)*tau_e_R(i))
                                     end do
                                 end if
+
+                                if (reservoir) then
+                                    flux_rs${XYZ}$_vf(j, k, l, lam_idx) = &
+                                        xi_M*Lambda_L &
+                                        *(vel_L(idx1) + s_M*(xi_L - 1d0)) &
+                                        + xi_P*Lambda_R &
+                                        *(vel_R(idx1) + s_P*(xi_R - 1d0))
+                                end if
+                        
 
                                 ! VOLUME FRACTION FLUX.
                                 !$acc loop seq

@@ -173,11 +173,12 @@ module m_global_parameters
 
     logical :: relax          !< activate phase change
     integer :: relax_model    !< Relaxation model
+    logical :: reservoir      !< activate latent heat reservoir method
     real(kind(0d0)) :: palpha_eps     !< trigger parameter for the p relaxation procedure, phase change model
     real(kind(0d0)) :: ptgalpha_eps   !< trigger parameter for the pTg relaxation procedure, phase change model
 
 !#ifndef _CRAYFTN
-!$acc declare create(relax, relax_model, palpha_eps,ptgalpha_eps)
+!$acc declare create(relax, relax_model, reservoir, palpha_eps,ptgalpha_eps)
 !#endif
 
     !> @name Boundary conditions (BC) in the x-, y- and z-directions, respectively
@@ -229,6 +230,7 @@ module m_global_parameters
     integer :: b_size                                  !< Number of elements in the symmetric b tensor, plus one
     integer :: tensor_size                             !< Number of elements in the full tensor plus one
     integer :: c_idx                                   !< Index of the color function
+    integer :: lam_idx                                 !< Index of latent heat reservoir advection eqn.
     !> @}
 
     !$acc declare create(bub_idx)
@@ -281,8 +283,7 @@ module m_global_parameters
 
     integer :: startx, starty, startz
 
-    !$acc declare create(sys_size, buff_size, startx, starty, startz, E_idx, gamma_idx, pi_inf_idx, alf_idx, n_idx, stress_idx,b_size, tensor_size, xi_idx)
-
+    !$acc declare create(sys_size, buff_size, startx, starty, startz,E_idx, gamma_idx, pi_inf_idx, alf_idx, n_idx, stress_idx,b_size,tensor_size, xi_idx, lam_idx)
     ! END: Simulation Algorithm Parameters =====================================
 
     ! Fluids Physical Parameters ===============================================
@@ -525,6 +526,7 @@ contains
         relax_model = dflt_int
         palpha_eps = dflt_real
         ptgalpha_eps = dflt_real
+        reservoir = .false.
         hypoelasticity = .false.
         hyperelasticity = .false.
         elasticity = .false.
@@ -862,6 +864,11 @@ contains
                     hyper_model = 1
                 end if
 
+                if (reservoir) then
+                    lam_idx = sys_size + 1
+                    sys_size = c_idx
+                end if 
+
                 if (.not. f_is_default(sigma)) then
                     c_idx = sys_size + 1
                     sys_size = c_idx
@@ -898,6 +905,11 @@ contains
                     ! adding three more equations for the \xi field and the elastic energy
                     sys_size = xi_idx%end + 1
                 end if
+
+                if (reservoir) then
+                    lam_idx = sys_size + 1
+                    sys_size = c_idx
+                end if 
 
                 if (.not. f_is_default(sigma)) then
                     c_idx = sys_size + 1
@@ -1120,6 +1132,7 @@ contains
         !$acc enter data copyin(dir_idx, dir_flg, dir_idx_tau)
 
         !$acc enter data copyin(relax, relax_model, palpha_eps,ptgalpha_eps)
+        !$acc enter data copyin(reservoir)
 
         ! Allocating grid variables for the x-, y- and z-directions
         @:ALLOCATE_GLOBAL(x_cb(-1 - buff_size:m + buff_size))

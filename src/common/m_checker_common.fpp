@@ -153,6 +153,7 @@ contains
             ((relax_model /= dflt_int) .or. (.not. f_is_default(palpha_eps)) .or. (.not. f_is_default(ptgalpha_eps))), &
             "relax is not set as true, but other phase change parameters have been modified. " // &
             "Either activate phase change or set the values to default")
+        @:PROHIBIT(relax .and. reservoir, "both relaxation and reservoir methods are activated")
     end subroutine s_check_inputs_phase_change
 
     !> Checks constraints on the Immersed Boundaries parameters.
