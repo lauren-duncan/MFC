@@ -199,6 +199,8 @@ module m_derived_types
 
         real(kind(0d0)) :: cf_val !! color function value
 
+        real(kind(0d0)) :: Lambda
+
     end type ic_patch_parameters
 
     type ib_patch_parameters

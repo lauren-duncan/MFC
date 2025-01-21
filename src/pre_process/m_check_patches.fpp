@@ -508,6 +508,9 @@ contains
         integer, intent(in) :: patch_id
         call s_int_to_str(patch_id, iStr)
 
+        @:PROHIBIT(reservoir .and. f_is_default(patch_icpp(1)%Lambda), &
+            "Patch "//trim(iStr)//": Lambda for material 1 must be set when reservoir method are activated")
+
         @:PROHIBIT(f_is_default(patch_icpp(patch_id)%vel(1)), &
             "Patch "//trim(iStr)//": vel(1) must be set")
         @:PROHIBIT(n == 0 .and. (.not. f_is_default(patch_icpp(patch_id)%vel(2))) .and. patch_icpp(patch_id)%vel(2) /= 0, &

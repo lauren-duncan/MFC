@@ -341,7 +341,7 @@ contains
         real(kind(0.0d0)), intent(in) :: TSat
         real(kind(0.0d0)), intent(out) :: LSat
 
-        real(kind(0.0d0)) :: hl, hg
+        real(kind(0.0d0)) :: hl, hv
  
         hl = gs_min(lp)*cvs(lp)*TSat + qvs(lp)
         hv = gs_min(vp)*cvs(vp)*TSat + qvs(vp)

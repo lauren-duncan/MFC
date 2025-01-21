@@ -520,7 +520,7 @@ contains
 
             if (reservoir) then
                 lam_idx = sys_size + 1
-                sys_size = c_idx
+                sys_size = lam_idx
             end if
 
             if (.not. f_is_default(sigma)) then
@@ -568,7 +568,7 @@ contains
 
             if (reservoir) then
                 lam_idx = sys_size + 1
-                sys_size = c_idx
+                sys_size = lam_idx
             end if
 
             if (.not. f_is_default(sigma)) then
