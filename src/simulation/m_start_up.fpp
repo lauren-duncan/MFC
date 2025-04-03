@@ -51,6 +51,8 @@ module m_start_up
                                 !! from the conservative and primitive variables
     use m_hypoelastic
 
+    use m_hypoplastic
+
     use m_hyperelastic
 
     use m_phase_change          !< Phase-change module
@@ -173,7 +175,8 @@ contains
             viscous, surface_tension,               & 
             hyperelasticity, hyper_model, R0ref, &
             bubbles_lagrange, lag_params, &
-            rkck_adap_dt, rkck_tolerance
+            rkck_adap_dt, rkck_tolerance, &
+            hypoplasticity, MGEoS_model
 
         ! Checking that an input file has been provided by the user. If it
         ! has, then the input file is read in, otherwise, simulation exits.
@@ -204,6 +207,8 @@ contains
             m_glb = m
             n_glb = n
             p_glb = p
+            
+            if (cfl_adap_dt .or. cfl_const_dt) cfl_dt = .true. 
 
             if (cfl_adap_dt .or. cfl_const_dt .or. rkck_adap_dt) cfl_dt = .true.
 
@@ -1264,7 +1269,7 @@ contains
                 !$acc update host(q_cons_ts(1)%vf(i)%sf)
             end do
         end if
-
+        
         call s_compute_derived_variables(t_step)
 
 
@@ -1513,6 +1518,7 @@ contains
 
         if (hypoelasticity) call s_initialize_hypoelastic_module()
         if (hyperelasticity) call s_initialize_hyperelastic_module()
+        if (hypoplasticity) call s_initialize_hypoplastic_module()
 
     end subroutine s_initialize_modules
 
@@ -1633,6 +1639,7 @@ contains
         call s_finalize_time_steppers_module()
         if (hypoelasticity) call s_finalize_hypoelastic_module()
         if (hyperelasticity) call s_finalize_hyperelastic_module()
+        if (hypoplasticity) call s_finalize_hypoplastic_module() 
         call s_finalize_derived_variables_module()
         call s_finalize_data_output_module()
         call s_finalize_rhs_module()

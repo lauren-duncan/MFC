@@ -47,6 +47,9 @@ contains
 
         integer :: i
 
+        !Temporary variables for MG EoS
+        real(wp) :: gamma_inv, pref_over_gamma, rho_eref, xi, pref
+
         !$acc loop seq
         do i = 1, num_fluids
             alpha_rho(i) = q_prim_vf(i)%sf(j, k, l)
@@ -77,6 +80,28 @@ contains
 
         E = gamma*pres + pi_inf + 0.5_wp*rho*vel_sum + qv
 
+        if (MGEoS_model == 1) then
+            pref_over_gamma = 0._wp
+            rho_eref = 0._wp
+            gamma_inv = 0._wp
+            do i = 1, num_fluids
+                gamma_inv = gamma_inv + &
+                            alpha(i)*(alpha_rho(i)/alpha(i))**qvps(i)/(gammas(i)*rho0(i)**qvps(i))
+
+                xi = 1._wp - rho0(i)*alpha(i)/alpha_rho(i)
+
+                pref = pi_infs(i) + rho0(i)*(mg_a(i)**2._wp)*xi &
+                       /(1._wp - mg_b(i)*xi)**2._wp
+
+                pref_over_gamma = pref_over_gamma + &
+                                  pref*alpha(i)*(alpha_rho(i)/alpha(i))**qvps(i)/(gammas(i)*rho0(i)**qvps(i))
+
+                rho_eref = rho_eref + alpha_rho(i)*qvs(i) + &
+                           0.5_wp*(pref + pi_infs(i))*(alpha_rho(i)/rho0(i) - alpha(i))
+            end do
+            ! Energy corresponding to Mie-Gruneisen EOS
+            E = rho_eref + gamma_inv*q_prim_vf(E_idx)%sf(j, k, l) - pref_over_gamma + 0.5_wp*rho*vel_sum
+        end if
         ! energy adjustments for hyperelastic energy
         if (hyperelasticity) then
             E = E + G*q_prim_vf(xiend + 1)%sf(j, k, l)
@@ -233,10 +258,10 @@ contains
             if (viscous) then
                 if (grid_geometry == 3) then
                     vcfl_dt = cfl_target*(min(dx(j), dy(k), fltr_dtheta)**2._wp) &
-                              /minval(1/(rho*Re_l))
+                              /minval(1._wp/(rho*Re_l))
                 else
                     vcfl_dt = cfl_target*(min(dx(j), dy(k), dz(l))**2._wp) &
-                              /minval(1/(rho*Re_l))
+                              /minval(1._wp/(rho*Re_l))
                 end if
             end if
 

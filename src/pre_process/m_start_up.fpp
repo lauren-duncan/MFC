@@ -135,7 +135,7 @@ contains
             pi_fac, perturb_flow, perturb_flow_fluid, perturb_flow_mag, &
             perturb_sph, perturb_sph_fluid, fluid_rho, &
             cyl_coord, loops_x, loops_y, loops_z, &
-            rhoref, pref, bubbles_euler, R0ref, nb, &
+            rhoref, pref, bubbles_euler, R0ref, Rinit, nb, &
             polytropic, thermal, Ca, Web, Re_inv, &
             polydisperse, poly_sigma, qbmm, &
             sigR, sigV, dist_type, rhoRV, R0_type, &
@@ -144,7 +144,7 @@ contains
             sigma, adv_n, cfl_adap_dt, cfl_const_dt, n_start, &
             n_start_old, surface_tension, hyperelasticity, pre_stress, &
             rkck_adap_dt, elliptic_smoothing, elliptic_smoothing_iters, &
-            viscous, bubbles_lagrange
+            viscous, bubbles_lagrange, hypoplasticity, MGEoS_model
 
         ! Inquiring the status of the pre_process.inp file
         file_loc = 'pre_process.inp'

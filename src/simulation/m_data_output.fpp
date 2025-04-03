@@ -269,21 +269,31 @@ contains
         real(wp) :: vel_sum    !< Cell-avg. velocity sum
         real(wp) :: pres       !< Cell-avg. pressure
         real(wp), dimension(num_fluids) :: alpha      !< Cell-avg. volume fraction
+        real(wp), dimension(num_fluids) :: alpha_rho  !< Cell-avg. density fraction
         real(wp) :: gamma      !< Cell-avg. sp. heat ratio
         real(wp) :: pi_inf     !< Cell-avg. liquid stiffness function
         real(wp) :: c          !< Cell-avg. sound speed
         real(wp) :: H          !< Cell-avg. enthalpy
         real(wp), dimension(2) :: Re         !< Cell-avg. Reynolds numbers
-        integer :: j, k, l
+        integer :: j, k, l, i
 
-        ! Computing Stability Criteria at Current Time-step
-        !$acc parallel loop collapse(3) gang vector default(present) private(vel, alpha, Re)
+        ! Computing Stability Criteria at current time-step
+
+        !$acc parallel loop collapse(3) gang vector default(present) private(vel, alpha, Re, alpha_rho)
         do l = 0, p
             do k = 0, n
                 do j = 0, m
                     call s_compute_enthalpy(q_prim_vf, pres, rho, gamma, pi_inf, Re, H, alpha, vel, vel_sum, j, k, l)
 
-                    call s_compute_speed_of_sound(pres, rho, gamma, pi_inf, H, alpha, vel_sum, 0._wp, c)
+                    ! Compute mixture sound speed
+                    if (model_eqns /= 5) then
+                        call s_compute_speed_of_sound(pres, rho, gamma, pi_inf, H, alpha, vel_sum, 0._wp, c)
+                    else
+                        do i = 1, num_fluids
+                            alpha_rho(i) = q_prim_vf(i)%sf(j, k, l)
+                        end do
+                        call s_compute_speed_of_sound(pres, rho, gamma, pi_inf, H, alpha, vel_sum, 0._wp, c, alpha_rho)
+                    end if
 
                     if (viscous) then
                         call s_compute_stability_from_dt(vel, c, rho, Re, j, k, l, icfl_sf, vcfl_sf, Rc_sf)
@@ -1078,6 +1088,8 @@ contains
         real(wp), dimension(6) :: tau_e
         real(wp) :: G
         real(wp) :: dyn_p, T
+        real(wp) :: E_e
+        real(wp), dimension(num_fluids) :: alpha_K, alpha_rho_K
 
         integer :: i, j, k, l, s, d !< Generic loop iterator
 
@@ -1166,17 +1178,23 @@ contains
 
                     dyn_p = 0.5_wp*rho*dot_product(vel, vel)
 
-                    if (elasticity) then
-
+                    if (elasticity .and. (model_eqns /= 5)) then
                         call s_compute_pressure( &
-                            q_cons_vf(1)%sf(j - 2, k, l), &
+                            q_cons_vf(E_idx)%sf(j - 2, k, l), &
                             q_cons_vf(alf_idx)%sf(j - 2, k, l), &
-                            dyn_p, pi_inf, gamma, rho, qv, rhoYks(:), pres, T, &
-                            q_cons_vf(stress_idx%beg)%sf(j - 2, k, l), &
-                            q_cons_vf(mom_idx%beg)%sf(j - 2, k, l), G)
+                            dyn_p, pi_inf, gamma, rho, qv, rhoYks(:), pres, T, 0._wp, 0._wp, G)
+                    else if (model_eqns == 5) then
+                        do s = contxb, contxe
+                            alpha_rho_K(s) = q_cons_vf(s)%sf(j - 2, k, l)
+                            alpha_K(s) = q_cons_vf(advxb + s - 1)%sf(j - 2, k, l)
+                        end do
+                        call s_compute_pressure(q_cons_vf(E_idx)%sf(j - 2, k, l), &
+                                                0._wp, dyn_p, &
+                                                pi_inf, 0._wp, rho, qv, rhoYks(:), &
+                                                pres, T, 0._wp, 0._wp, G, alpha_K, alpha_rho_K)
                     else
                         call s_compute_pressure( &
-                            q_cons_vf(1)%sf(j - 2, k, l), &
+                            q_cons_vf(E_idx)%sf(j - 2, k, l), &
                             q_cons_vf(alf_idx)%sf(j - 2, k, l), &
                             dyn_p, pi_inf, gamma, rho, qv, rhoYks(:), pres, T)
                     end if
@@ -1235,12 +1253,21 @@ contains
                     end if
 
                     ! Compute mixture sound Speed
-                    call s_compute_speed_of_sound(pres, rho, gamma, pi_inf, &
-                                                  ((gamma + 1._wp)*pres + pi_inf)/rho, alpha, 0._wp, 0._wp, c)
+                    if (model_eqns /= 5) then
+                        call s_compute_speed_of_sound(pres, rho, gamma, pi_inf, &
+                                                      ((gamma + 1._wp)*pres + pi_inf)/rho, alpha, 0._wp, 0._wp, c)
+                    else
+                        do s = contxb, contxe
+                            alpha_rho_K(s) = q_cons_vf(s)%sf(j - 2, k, l)
+                        end do
+                        call s_compute_speed_of_sound(pres, rho, gamma, pi_inf, q_cons_vf(E_idx)%sf(j - 2, k, l) + pres/rho, &
+                                                      alpha, 0._wp, 0._wp, c, alpha_rho_K)
+                    end if
 
                     accel = accel_mag(j - 2, k, l)
                 end if
-            elseif (p == 0) then ! 2D simulation
+            else if (p == 0) then ! 2D simulation
+
                 if (chemistry) then
                     do d = 1, num_species
                         rhoYks(d) = q_cons_vf(chemxb + d - 1)%sf(j - 2, k - 2, l)
@@ -1273,7 +1300,7 @@ contains
 
                         dyn_p = 0.5_wp*rho*dot_product(vel, vel)
 
-                        if (elasticity) then
+                        if ((elasticity .eqv. .true.) .and. (model_eqns /= 5)) then
                             call s_compute_pressure( &
                                 q_cons_vf(1)%sf(j - 2, k - 2, l), &
                                 q_cons_vf(alf_idx)%sf(j - 2, k - 2, l), &
@@ -1282,7 +1309,19 @@ contains
                                 pres, &
                                 T, &
                                 q_cons_vf(stress_idx%beg)%sf(j - 2, k - 2, l), &
-                                q_cons_vf(mom_idx%beg)%sf(j - 2, k - 2, l), G)
+                                q_cons_vf(mom_idx%beg)%sf(j - 2, k - 2, l), &
+                                G)
+
+                        else if (model_eqns == 5) then
+                            do s = contxb, contxe
+                                alpha_K(s) = q_cons_vf(advxb + s - 1)%sf(j - 2, k - 2, l)
+                                alpha_rho_K(s) = q_cons_vf(s)%sf(j - 2, k - 2, l)
+                            end do
+                            call s_compute_pressure(q_cons_vf(E_idx)%sf(j - 2, k - 2, l), &
+                                                    0._wp, dyn_p, &
+                                                    pi_inf, 0._wp, rho, qv, rhoYks(:), &
+                                                    pres, T, 0._wp, 0._wp, 0._wp, &
+                                                    alpha_K, alpha_rho_K)
                         else
                             call s_compute_pressure(q_cons_vf(E_idx)%sf(j - 2, k - 2, l), &
                                                     q_cons_vf(alf_idx)%sf(j - 2, k - 2, l), &
@@ -1320,9 +1359,16 @@ contains
                             Rdot(:) = nRdot(:)/nbub
                         end if
                         ! Compute mixture sound speed
-                        call s_compute_speed_of_sound(pres, rho, gamma, pi_inf, &
-                                                      ((gamma + 1._wp)*pres + pi_inf)/rho, alpha, 0._wp, 0._wp, c)
-
+                        if (model_eqns /= 5) then
+                            call s_compute_speed_of_sound(pres, rho, gamma, pi_inf, &
+                                                          ((gamma + 1._wp)*pres + pi_inf)/rho, alpha, 0._wp, 0._wp, c)
+                        else
+                            do s = contxb, contxe
+                                alpha_rho_K(s) = q_cons_vf(s)%sf(j - 2, k, l)
+                            end do
+                            call s_compute_speed_of_sound(pres, rho, gamma, pi_inf, &
+                                                          q_cons_vf(E_idx)%sf(j - 2, k, l) + pres/rho, alpha, 0._wp, 0._wp, c, alpha_rho_K)
+                        end if
                     end if
                 end if
             else ! 3D

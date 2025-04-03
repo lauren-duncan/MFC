@@ -120,7 +120,8 @@ contains
             & 'wave_speeds', 'avg_state', 'precision', 'bc_x%beg', 'bc_x%end', &
             & 'bc_y%beg', 'bc_y%end', 'bc_z%beg', 'bc_z%end',  'fd_order',     &
             & 'num_probes', 'num_integrals', 'bubble_model', 'thermal',        &
-            & 'R0_type', 'num_source', 'relax_model', 'hyper_model', 'num_ibs', 'n_start'       ]
+            & 'R0_type', 'num_source', 'relax_model', 'hyper_model', 'num_ibs', &
+            & 'n_start', 'MGEoS_model' ]
             call MPI_BCAST(${VAR}$, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
         #:endfor
 
@@ -136,7 +137,7 @@ contains
             & 'bc_z%grcbc_in', 'bc_z%grcbc_out', 'bc_z%grcbc_vel_out',          &
             & 'cfl_adap_dt', 'cfl_const_dt', 'cfl_dt', 'surface_tension',        &
             & 'viscous', 'shear_stress', 'bulk_stress', 'bubbles_lagrange',     &
-            & 'hyperelasticity', 'rkck_adap_dt' ]
+            & 'hyperelasticity', 'rkck_adap_dt', 'hypoplasticity' ]
             call MPI_BCAST(${VAR}$, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, ierr)
         #:endfor
 
@@ -197,10 +198,11 @@ contains
 
         do i = 1, num_fluids_max
             #:for VAR in [ 'gamma','pi_inf','mul0','ss','pv','gamma_v','M_v',  &
-                & 'mu_v','k_v', 'cp_v','G', 'cv', 'qv', 'qvp' ]
+                & 'mu_v','k_v', 'cp_v','G', 'cv', 'qv', 'qvp', 'rho0', 'mg_a', 'mg_b' ]
                 call MPI_BCAST(fluid_pp(i)%${VAR}$, 1, mpi_p, 0, MPI_COMM_WORLD, ierr)
             #:endfor
             call MPI_BCAST(fluid_pp(i)%Re(1), 2, mpi_p, 0, MPI_COMM_WORLD, ierr)
+            call MPI_BCAST(fluid_pp(i)%einstein_cv(1), 2, mpi_p, 0, MPI_COMM_WORLD, ierr)
         end do
 
         do i = 1, num_fluids_max
@@ -208,6 +210,12 @@ contains
                 call MPI_BCAST(${VAR}$ (i), 1, mpi_p, 0, MPI_COMM_WORLD, ierr)
             #:endfor
         end do
+
+        if (hypoplasticity) then
+            do i = 1, num_fluids_max
+                call MPI_BCAST(fluid_pp(i)%jcook(1), 11, mpi_p, 0, MPI_COMM_WORLD, ierr)
+            end do
+        end if
 
         do i = 1, num_ibs
             #:for VAR in [ 'radius', 'length_x', 'length_y', &

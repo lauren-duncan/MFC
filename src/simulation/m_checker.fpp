@@ -4,7 +4,7 @@
 
 #:include 'macros.fpp'
 #:include 'case.fpp'
-
+#:include 'macros.fpp'
 !> @brief The purpose of the module is to check for compatible input files
 module m_checker
 

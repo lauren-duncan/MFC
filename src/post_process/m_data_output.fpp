@@ -1335,6 +1335,7 @@ contains
                             maxvel = abs(vel(s))
                         end if
                     end do
+
                     do l = 1, adv_idx%end - E_idx
                         adv(l) = q_prim_vf(E_idx + l)%sf(i, j, k)
                         gamma = gamma + adv(l)*fluid_pp(l)%gamma

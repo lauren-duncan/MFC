@@ -24,6 +24,7 @@ class ParamType(Enum):
 COMMON = {
     'hypoelasticity': ParamType.LOG,
     'hyperelasticity': ParamType.LOG,
+    'hypoplasticity': ParamType.LOG,
     'cyl_coord': ParamType.LOG,
     'pref': ParamType.REAL,
     'p': ParamType.INT,
@@ -54,6 +55,7 @@ COMMON = {
     'adv_n': ParamType.LOG,
     'cfl_adap_dt': ParamType.LOG,
     'cfl_const_dt': ParamType.LOG,
+    'MGEoS_model': ParamType.INT,
     'chemistry': ParamType.LOG,
     'cantera_file': ParamType.STR,
     'rkck_adap_dt': ParamType.LOG, 
@@ -131,8 +133,11 @@ for f_id in range(1, 10+1):
     PRE_PROCESS[f'fluid_rho({f_id})'] = ParamType.REAL
 
     for real_attr in ["gamma", "pi_inf", "mul0", "ss", "pv", "gamma_v", "M_v",
-                      "mu_v", "k_v", "cp_v", "G", "cv", "qv", "qvp" ]:
+                      "mu_v", "k_v", "cp_v", "G", "cv", "qv", "qvp", "rho0", "mg_a", "mg_b" ]:
         PRE_PROCESS[f"fluid_pp({f_id})%{real_attr}"] = ParamType.REAL
+
+    for einstein_cv_id in [1, 2]:
+        PRE_PROCESS[f"fluid_pp({f_id})%einstein_cv({einstein_cv_id})"] = ParamType.REAL
 
 for p_id in range(1, 10+1):
     for attribute, ty in [("geometry", ParamType.INT), ("smoothen", ParamType.LOG),
@@ -317,11 +322,17 @@ for probe_id in range(1,10+1):
 
 for f_id in range(1,10+1):
     for real_attr in ["gamma", "pi_inf", "mul0", "ss", "pv", "gamma_v", "M_v",
-                      "mu_v", "k_v", "cp_v", "G", "cv", "qv", "qvp" ]:
+                      "mu_v", "k_v", "cp_v", "G", "cv", "qv", "qvp", "rho0", "mg_a", "mg_b" ]:
         SIMULATION[f"fluid_pp({f_id})%{real_attr}"] = ParamType.REAL
 
     for re_id in [1, 2]:
         SIMULATION[f"fluid_pp({f_id})%Re({re_id})"] = ParamType.REAL
+
+    for einstein_cv_id in [1, 2]:
+        SIMULATION[f"fluid_pp({f_id})%einstein_cv({einstein_cv_id})"] = ParamType.REAL
+
+    for jcook_id in range(1,11+1) :
+        SIMULATION[f"fluid_pp({f_id})%jcook({jcook_id})"] = ParamType.REAL
 
     for mono_id in range(1,4+1):
         for int_attr in ["pulse", "support", "num_elements", "element_on", "bb_num_freq"]:
@@ -408,15 +419,21 @@ for cmp_id in range(100):
     POST_PROCESS[f'chem_wrt_Y({cmp_id})'] = ParamType.LOG
 POST_PROCESS['chem_wrt_T'] = ParamType.LOG
 
-for fl_id in range(1,10+1):
+for f_id in range(1,10+1):
     for append, ty in [("schlieren_alpha", ParamType.REAL),
                        ("alpha_rho_wrt", ParamType.LOG),
                        ("alpha_wrt", ParamType.LOG), ("kappa_wrt", ParamType.LOG)]:
-        POST_PROCESS[f'{append}({fl_id})'] = ty
+        POST_PROCESS[f'{append}({f_id})'] = ty
 
     for real_attr in ["gamma", "pi_inf", "ss", "pv", "gamma_v", "M_v", "mu_v", "k_v", "cp_v",
-                      "G", "mul0", "cv", "qv", "qvp" ]:
-        POST_PROCESS[f"fluid_pp({fl_id})%{real_attr}"] = ParamType.REAL
+                      "G", "mul0", "cv", "qv", "qvp", "rho0", "mg_a", "mg_b" ]:
+        POST_PROCESS[f"fluid_pp({f_id})%{real_attr}"] = ParamType.REAL
+
+    for einstein_cv_id in [1, 2]:
+        POST_PROCESS[f"fluid_pp({f_id})%einstein_cv({einstein_cv_id})"] = ParamType.REAL
+
+    for jcook_id in range(1,11+1) :
+        POST_PROCESS[f"fluid_pp({f_id})%jcook({jcook_id})"] = ParamType.REAL
 
 IGNORE = ["cantera_file", "chemistry"]
 

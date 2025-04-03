@@ -125,7 +125,7 @@ For example, $m=n=p=499$ discretizes the domain into $500^3$ cells.
 When the simulation is 2D/axi-symmetric or 1D, it requires that $p=0$ or $p=n=0$, respectively.
 
 - `stretch_[x,y,z]` activates grid stretching in the $[x,y,z]$ directions.
-The grid is gradually stretched such that the domain boundaries are pushed away from the origin along a specified axis.
+The grid is gradually stretched such that the domain boundaries are pushed away from the origin along a specified axis. WENO7 does not support grid stretching.
 
 - `a_[x,y,z]`, `[x,y,z]_a`, and `[x,y,z]_b` are parameters that define the grid stretching function. When grid stretching along the $x$ axis is considered, the stretching function is given as:
 

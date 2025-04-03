@@ -84,7 +84,7 @@ contains
             relax_model, cf_wrt, sigma, adv_n, ib, num_ibs, &
             cfl_adap_dt, cfl_const_dt, t_save, t_stop, n_start, &
             cfl_target, surface_tension, bubbles_lagrange, rkck_adap_dt, &
-            sim_data, hyperelasticity, kymograph
+            sim_data, hyperelasticity, kymograph, hypoplasticity, MGEoS_model
 
         ! Inquiring the status of the post_process.inp file
         file_loc = 'post_process.inp'
@@ -152,8 +152,8 @@ contains
     end subroutine s_check_input_file
 
     subroutine s_perform_time_step(t_step)
-
         integer, intent(inout) :: t_step
+        integer :: i
         if (proc_rank == 0) then
             if (cfl_dt) then
                 print '(" ["I3"%]  Saving "I8" of "I0"")', &
@@ -187,13 +187,19 @@ contains
         ! Converting the conservative variables to the primitive ones
         call s_convert_conservative_to_primitive_variables(q_cons_vf, q_T_sf, q_prim_vf, idwbuff)
 
+        !do i= -offset_x%beg, m+offset_x%end
+        !    print *,'Pres=',i,q_prim_vf(E_idx)%sf(i,0,0)
+        !end do
+        !print *, 'offset_y',-offset_y%beg,n+offset_y%end
+        !print *, 'offset_z',-offset_z%beg,p+offset_z%end
     end subroutine s_perform_time_step
 
     subroutine s_save_data(t_step, varname, pres, c, H)
-
         integer, intent(inout) :: t_step
         character(LEN=name_len), intent(inout) :: varname
         real(wp), intent(inout) :: pres, c, H
+        real(wp), dimension(num_fluids) :: alpha_K, alpha_rho_K
+        real(wp) :: rho_avg
 
         integer :: i, j, k, l
 
@@ -262,7 +268,7 @@ contains
         end if
 
         ! Adding the partial densities to the formatted database file
-        if ((model_eqns == 2) .or. (model_eqns == 3) .or. (model_eqns == 4)) then
+        if ((model_eqns == 2) .or. (model_eqns == 3) .or. (model_eqns == 4) .or. (model_eqns == 5)) then
             do i = 1, num_fluids
                 if (alpha_rho_wrt(i) .or. (cons_vars_wrt .or. prim_vars_wrt)) then
                     q_sf = q_cons_vf(i)%sf(x_beg:x_end, y_beg:y_end, z_beg:z_end)
@@ -314,6 +320,17 @@ contains
 
             end if
         end do
+
+        ! Adding the temperature to the formatted database file
+        if (model_eqns == 5 .and. prim_vars_wrt) then
+
+            q_sf = q_prim_vf(plasidx + 1)%sf(x_beg:x_end, y_beg:y_end, z_beg:z_end)
+
+            write (varname, '(A)') 'temp'
+            call s_write_variable_to_formatted_database_file(varname, t_step)
+
+            varname(:) = ' '
+        end if
 
         ! Adding the species' concentrations to the formatted database file
         if (chemistry) then
@@ -386,6 +403,17 @@ contains
             call s_write_variable_to_formatted_database_file(varname, t_step)
             varname(:) = ' '
         end if
+        if (hypoplasticity) then
+            if (prim_vars_wrt) then
+                q_sf = q_prim_vf(plasidx)%sf( &
+                       -offset_x%beg:m + offset_x%end, &
+                       -offset_y%beg:n + offset_y%end, &
+                       -offset_z%beg:p + offset_z%end)
+                write (varname, '(A)') 'xi_p'
+                call s_write_variable_to_formatted_database_file(varname, t_step)
+            end if
+            varname(:) = ' '
+        end if
 
         ! Adding the pressure to the formatted database file
         if (pres_wrt .or. prim_vars_wrt) then
@@ -399,7 +427,7 @@ contains
 
         ! Adding the volume fraction(s) to the formatted database file
         if (((model_eqns == 2) .and. (bubbles_euler .neqv. .true.)) &
-            .or. (model_eqns == 3) &
+            .or. (model_eqns == 3) .or. (model_eqns == 5) &
             ) then
 
             do i = 1, num_fluids - 1
@@ -479,8 +507,11 @@ contains
             do k = -offset_z%beg, p + offset_z%end
                 do j = -offset_y%beg, n + offset_y%end
                     do i = -offset_x%beg, m + offset_x%end
+                        rho_avg = 0._wp
                         do l = 1, adv_idx%end - E_idx
-                            adv(l) = q_prim_vf(E_idx + l)%sf(i, j, k)
+                            alpha_K(l) = q_prim_vf(E_idx + l)%sf(i, j, k)
+                            alpha_rho_K(l) = q_prim_vf(l)%sf(i, j, k)
+                            rho_avg = rho_avg + alpha_rho_K(l)
                         end do
 
                         pres = q_prim_vf(E_idx)%sf(i, j, k)
@@ -488,9 +519,9 @@ contains
                         H = ((gamma_sf(i, j, k) + 1._wp)*pres + &
                              pi_inf_sf(i, j, k))/rho_sf(i, j, k)
 
-                        call s_compute_speed_of_sound(pres, rho_sf(i, j, k), &
+                        call s_compute_speed_of_sound(pres, rho_avg, &
                                                       gamma_sf(i, j, k), pi_inf_sf(i, j, k), &
-                                                      H, adv, 0._wp, 0._wp, c)
+                                                      H, adv, 0._wp, 0._wp, c, alpha_rho_K)
 
                         q_sf(i, j, k) = c
                     end do

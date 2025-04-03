@@ -49,7 +49,9 @@ contains
         call s_check_inputs_weno
         call s_check_inputs_bc
         call s_check_inputs_stiffened_eos
+        call s_check_inputs_mie_gruneisen_eos
         call s_check_inputs_elasticity
+        call s_check_inputs_hypoplasticity
         call s_check_inputs_surface_tension
         call s_check_inputs_moving_bc
 
@@ -164,10 +166,25 @@ contains
         @:PROHIBIT(elasticity .and. .not. (model_eqns == 2 .or. model_eqns == 3))
         #:for X in ['x', 'y', 'z']
             #:for BOUND in ['beg', 'end']
-                @:PROHIBIT(hyperelasticity .and. bc_${X}$%${BOUND}$ /= dflt_int .and. (bc_${X}$%${BOUND}$ < -3))
+                @:PROHIBIT(hyperelasticity .and. bc_${X}$%${BOUND}$ /= dflt_int .and. (bc_${X}$%${BOUND}$ .lt. -3))
             #:endfor
         #:endfor
     end subroutine s_check_inputs_elasticity
+
+    !> Checks constraints on hyperplasticity parameters
+    subroutine s_check_inputs_hypoplasticity
+        character(len=5) :: iStr, jStr
+        integer :: i, j
+
+        do i = 1, num_fluids
+            call s_int_to_str(i, iStr)
+            do j = 1, 10 ! TODO
+                call s_int_to_str(j, jStr)
+                @:PROHIBIT( .not. f_is_default(fluid_pp(i)%jcook(j)) .and. fluid_pp(i)%jcook(j) <= 0._wp, &
+                    'fluid_pp('//trim(iStr)//')%'//'jcook('//trim(jStr)//') must be positive and present')
+            end do
+        end do
+    end subroutine s_check_inputs_hypoplasticity
 
     !> Checks constraints on dimensionality and the number of cells for the grid.
         !! Called by s_check_inputs_common for all three stages
@@ -185,7 +202,7 @@ contains
     !> Checks constraints on model equations and number of fluids in the flow.
         !! Called by s_check_inputs_common for all three stages
     subroutine s_check_inputs_model_eqns_and_num_fluids
-        @:PROHIBIT(all(model_eqns /= (/1, 2, 3, 4/)), "model_eqns must be 1, 2, 3, or 4")
+        @:PROHIBIT(all(model_eqns /= (/1, 2, 3, 4, 5/)), "model_eqns must be 1, 2, 3, 4, or 5")
         @:PROHIBIT(num_fluids /= dflt_int .and. num_fluids < 1, "num_fluids must be positive")
         @:PROHIBIT(model_eqns == 1 .and. num_fluids /= dflt_int, "num_fluids is not supported for model_eqns = 1")
         @:PROHIBIT(model_eqns == 2 .and. num_fluids == dflt_int, "5-equation model (model_eqns = 2) requires num_fluids to be set")
@@ -292,6 +309,19 @@ contains
         end do
     end subroutine s_check_inputs_stiffened_eos
 
+    !> Checks constraints on the stiffened equation of state fluids parameters.
+        !! Called by s_check_inputs_common for all three stages
+    subroutine s_check_inputs_mie_gruneisen_eos
+        character(len=5) :: iStr !< for int to string conversion
+        integer :: i
+
+        do i = 1, num_fluids
+            call s_int_to_str(i, iStr)
+            @:PROHIBIT(.not. f_is_default(fluid_pp(i)%rho0) .and.  fluid_pp(i)%rho0 < 0._wp,&
+                'fluid_pp('//trim(iStr)//')%'// 'rho0 must be positive')
+        end do
+    end subroutine s_check_inputs_mie_gruneisen_eos
+
     !> Checks constraints on the surface tension parameters.
         !! Called by s_check_inputs_common for all three stages
     subroutine s_check_inputs_surface_tension
@@ -318,8 +348,7 @@ contains
             @:PROHIBIT(surface_tension .and. f_is_default(patch_icpp(i)%cf_val), &
                 "patch_icpp(i)%cf_val must be set if surface_tension is enabled")
         end do
-#endif MFC_PRE_PROCESS
-
+#endif
     end subroutine s_check_inputs_surface_tension
 
     !> Checks constraints on the inputs for moving boundaries.

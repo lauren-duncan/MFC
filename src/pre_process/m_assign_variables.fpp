@@ -495,12 +495,16 @@ contains
             elseif (n > 0) then
                 xi_cart(2) = y_cc(k)
             end if
-
             ! assigning the reference map to the q_prim vector field
             do i = 1, num_dims
                 q_prim_vf(i + xibeg - 1)%sf(j, k, l) = eta*xi_cart(i) + &
                                                        (1_wp - eta)*orig_prim_vf(i + xibeg - 1)
             end do
+        end if
+
+        if (hypoplasticity) then
+            ! assigning the strain hardening to the q_prim vector field
+            q_prim_vf(plasidx)%sf(j, k, l) = 0._wp
         end if
 
         if (mpp_lim .and. bubbles_euler) then

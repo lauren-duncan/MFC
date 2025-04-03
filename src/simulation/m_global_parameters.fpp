@@ -145,6 +145,8 @@ module m_global_parameters
     logical :: hyperelasticity !< hyperelasticity modeling
     integer :: hyper_model     !< hyperelasticity solver algorithm
     logical :: elasticity      !< elasticity modeling, true for hyper or hypo
+    logical :: hypoplasticity   !< turn on hypoplasticity
+    integer :: MGEoS_model      !< shockEoS(1), complete Mie-Gruneisen(2), JWL(3), Cochran-Chan(4)
     logical, parameter :: chemistry = .${chemistry}$. !< Chemistry modeling
     logical :: cu_tensor
     logical :: viscous       !< Viscous effects
@@ -170,7 +172,8 @@ module m_global_parameters
         !$acc declare create(num_dims, weno_polyn, weno_order, weno_num_stencils, num_fluids, wenojs, mapped_weno, wenoz, teno, wenoz_q)
     #:endif
 
-    !$acc declare create(mpp_lim, model_eqns, mixture_err, alt_soundspeed, avg_state, mp_weno, weno_eps, teno_CT, hypoelasticity, hyperelasticity, hyper_model, elasticity, low_Mach, viscous, shear_stress, bulk_stress)
+    !$acc declare create(mpp_lim, model_eqns, mixture_err, alt_soundspeed, avg_state, mp_weno, weno_eps, teno_CT, hypoelasticity, &
+    !$acc hyperelasticity, hyper_model, elasticity, low_Mach, viscous, shear_stress, bulk_stress, hypoplasticity, MGEoS_model)
 
     logical :: relax          !< activate phase change
     integer :: relax_model    !< Relaxation model
@@ -438,11 +441,19 @@ module m_global_parameters
     integer :: strxb, strxe
     integer :: chemxb, chemxe
     integer :: xibeg, xiend
+    integer :: plasidx
     !$acc declare create(momxb, momxe, advxb, advxe, contxb, contxe, intxb, intxe, bubxb, bubxe, strxb, strxe, chemxb, chemxe)
     !$acc declare create(xibeg,xiend)
+    !$acc declare create(plasidx)
 
     real(wp), allocatable, dimension(:) :: gammas, gs_min, pi_infs, ps_inf, cvs, qvs, qvps
     !$acc declare create(gammas, gs_min, pi_infs, ps_inf, cvs, qvs, qvps)
+    real(wp), allocatable, dimension(:) :: rho0, mg_a, mg_b, einstein_cv1, einstein_cv2
+    !$acc declare create(rho0, mg_a, mg_b, einstein_cv1, einstein_cv2)
+    #:for VAR in range(1,12)
+        real(wp), allocatable, public, dimension(:) :: jcook${VAR}$
+    #:endfor
+    !$acc declare create(jcook1,jcook2,jcook3,jcook4,jcook5,jcook6,jcook7,jcook8,jcook9,jcook10,jcook11)
 
     real(wp) :: mytime       !< Current simulation time
     real(wp) :: finaltime    !< Final simulation time
@@ -526,6 +537,8 @@ contains
         hypoelasticity = .false.
         hyperelasticity = .false.
         elasticity = .false.
+        hypoplasticity = .false.
+        MGEoS_model = dflt_int
         hyper_model = dflt_int
         b_size = dflt_int
         tensor_size = dflt_int
@@ -579,6 +592,11 @@ contains
             fluid_pp(i)%k_v = dflt_real
             fluid_pp(i)%cp_v = dflt_real
             fluid_pp(i)%G = 0._wp
+            fluid_pp(i)%rho0 = dflt_real
+            fluid_pp(i)%mg_a = dflt_real
+            fluid_pp(i)%mg_b = dflt_real
+            fluid_pp(i)%einstein_cv(:) = 0._wp
+            fluid_pp(i)%jcook(:) = dflt_real
         end do
 
         ! Tait EOS
@@ -965,6 +983,22 @@ contains
                         pref = 1._wp
                     end if
                 end if
+            else if (model_eqns == 5) then
+                ! Annotating structure of the state and flux vectors belonging
+                ! to the system of equations defined by the selected number of
+                ! spatial dimensions and the volume fraction model
+
+                cont_idx%beg = 1
+                cont_idx%end = num_fluids
+                mom_idx%beg = cont_idx%end + 1
+                mom_idx%end = cont_idx%end + num_dims
+                E_idx = mom_idx%end + 1
+                adv_idx%beg = E_idx + 1
+                adv_idx%end = E_idx + num_fluids
+                !mgidxb = adv_idx%end + 1
+                !mgidxe = adv_idx%end + 3
+                sys_size = adv_idx%end !mgidxe
+
             end if
 
             ! Determining the number of fluids for which the shear and the
@@ -1004,7 +1038,7 @@ contains
         end if
         ! END: Volume Fraction Model
 
-        elasticity = hypoelasticity .or. hyperelasticity
+        elasticity = hypoelasticity .or. hyperelasticity .or. hypoplasticity
 
         if (elasticity) then
             ! creates stress indices for both hypo and hyperelasticity
@@ -1023,6 +1057,16 @@ contains
             xi_idx%end = sys_size + num_dims
             ! adding three more equations for the \xi field and the elastic energy
             sys_size = xi_idx%end + 1
+        end if
+
+        if (hypoplasticity) then
+            ! number of stresses is 1 in 1D, 2 in quasi-1D, 3 in
+            ! 2D-plane stress, 4 in 2D-plane strain, 6 in 3D
+            ! TODO add more flags to incorporate all these cases
+
+            ! only implementing 2D-plane stress for now
+            plasidx = stress_idx%end + 1
+            sys_size = plasidx
         end if
 
         if (chemistry) then
@@ -1076,7 +1120,7 @@ contains
 
         !$acc update device(Re_size)
 
-        if (elasticity) then
+        if (elasticity .or. model_eqns == 5) then
             fd_number = max(1, fd_order/2)
         end if
 
@@ -1126,13 +1170,14 @@ contains
         chemxe = species_idx%end
 
         !$acc update device(momxb, momxe, advxb, advxe, contxb, contxe, bubxb, bubxe, intxb, intxe, sys_size, buff_size, E_idx, alf_idx, n_idx, adv_n, adap_dt, pi_fac, strxb, strxe, chemxb, chemxe)
-        !$acc update device(b_size, xibeg, xiend, tensor_size)
+        !$acc update device(b_size, xibeg, xiend, tensor_size, plasidx)
 
         !$acc update device(species_idx)
         !$acc update device(cfl_target, m, n, p)
 
         !$acc update device(alt_soundspeed, acoustic_source, num_source)
         !$acc update device(dt, sys_size, buff_size, pref, rhoref, gamma_idx, pi_inf_idx, E_idx, alf_idx, stress_idx, mpp_lim, bubbles_euler, hypoelasticity, alt_soundspeed, avg_state, num_fluids, model_eqns, num_dims, mixture_err, grid_geometry, cyl_coord, mp_weno, weno_eps, teno_CT, hyperelasticity, hyper_model, elasticity, xi_idx, low_Mach)
+        !$acc update device(hypoplasticity, MGEoS_model)
 
         #:if not MFC_CASE_OPTIMIZATION
             !$acc update device(wenojs, mapped_weno, wenoz, teno)

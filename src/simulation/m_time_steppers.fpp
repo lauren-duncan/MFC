@@ -171,6 +171,12 @@ contains
                 @:ACC_SETUP_SFs(q_prim_vf(i))
             end do
         end if
+        if (hypoplasticity) then
+            @:ALLOCATE(q_prim_vf(plasidx)%sf(idwbuff(1)%beg:idwbuff(1)%end, &
+                idwbuff(2)%beg:idwbuff(2)%end, &
+                idwbuff(3)%beg:idwbuff(3)%end))
+            @:ACC_SETUP_SFs(q_prim_vf(plasidx))
+        end if
 
         if (model_eqns == 3) then
             do i = internalEnergies_idx%beg, internalEnergies_idx%end
@@ -619,6 +625,7 @@ contains
             call s_write_run_time_information(q_prim_vf, t_step)
         end if
 
+        !print *, 'after_run_time_info'
         if (probe_wrt) then
             call s_time_step_cycling(t_step)
         end if
@@ -924,7 +931,7 @@ contains
         real(wp), dimension(num_dims) :: vel        !< Cell-avg. velocity
         real(wp) :: vel_sum    !< Cell-avg. velocity sum
         real(wp) :: pres       !< Cell-avg. pressure
-        real(wp), dimension(num_fluids) :: alpha      !< Cell-avg. volume fraction
+        real(wp), dimension(num_fluids) :: alpha, alpha_rho      !< Cell-avg. volume fraction
         real(wp) :: gamma      !< Cell-avg. sp. heat ratio
         real(wp) :: pi_inf     !< Cell-avg. liquid stiffness function
         real(wp) :: c          !< Cell-avg. sound speed
@@ -933,7 +940,7 @@ contains
         type(vector_field) :: gm_alpha_qp
 
         real(wp) :: dt_local
-        integer :: j, k, l !< Generic loop iterators
+        integer :: i, j, k, l !< Generic loop iterators
 
         call s_convert_conservative_to_primitive_variables( &
             q_cons_ts(1)%vf, &
@@ -942,15 +949,21 @@ contains
             idwint, &
             gm_alpha_qp%vf)
 
-        !$acc parallel loop collapse(3) gang vector default(present) private(vel, alpha, Re)
+        !$acc parallel loop collapse(3) gang vector default(present) private(vel, alpha, alpha_rho, Re)
         do l = 0, p
             do k = 0, n
                 do j = 0, m
+                    do i = 1, num_fluids
+                        alpha_rho(i) = q_prim_vf(i)%sf(j, k, l)
+                    end do
                     call s_compute_enthalpy(q_prim_vf, pres, rho, gamma, pi_inf, Re, H, alpha, vel, vel_sum, j, k, l)
 
                     ! Compute mixture sound speed
-                    call s_compute_speed_of_sound(pres, rho, gamma, pi_inf, H, alpha, vel_sum, 0._wp, c)
-
+                    if (model_eqns /= 5) then
+                        call s_compute_speed_of_sound(pres, rho, gamma, pi_inf, H, alpha, vel_sum, 0._wp, c)
+                    else
+                        call s_compute_speed_of_sound(pres, rho, gamma, pi_inf, H, alpha, vel_sum, 0._wp, c, alpha_rho)
+                    end if
                     call s_compute_dt_from_cfl(vel, c, max_dt, rho, Re, j, k, l)
                 end do
             end do
@@ -1239,6 +1252,10 @@ contains
             do i = internalEnergies_idx%beg, internalEnergies_idx%end
                 @:DEALLOCATE(q_prim_vf(i)%sf)
             end do
+        end if
+
+        if (hypoplasticity) then
+            @:DEALLOCATE(q_prim_vf(plasidx)%sf)
         end if
 
         @:DEALLOCATE(q_prim_vf)

@@ -168,7 +168,8 @@ contains
             & 'prim_vars_wrt', 'c_wrt', 'qm_wrt','schlieren_wrt', 'bubbles_euler', 'qbmm',   &
             & 'polytropic', 'polydisperse', 'file_per_process', 'relax', 'cf_wrt',     &
             & 'adv_n', 'ib', 'cfl_adap_dt', 'cfl_const_dt', 'cfl_dt',          &
-            & 'surface_tension', 'hyperelasticity', 'bubbles_lagrange', 'rkck_adap_dt', 'output_partial_domain', 'kymograph']
+            & 'surface_tension', 'hyperelasticity', 'bubbles_lagrange', 'rkck_adap_dt', &
+            & 'output_partial_domain', 'kymograph', 'hypoplasticity']
             call MPI_BCAST(${VAR}$, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, ierr)
         #:endfor
 
@@ -186,7 +187,16 @@ contains
             call MPI_BCAST(fluid_pp(i)%qv, 1, mpi_p, 0, MPI_COMM_WORLD, ierr)
             call MPI_BCAST(fluid_pp(i)%qvp, 1, mpi_p, 0, MPI_COMM_WORLD, ierr)
             call MPI_BCAST(fluid_pp(i)%G, 1, mpi_p, 0, MPI_COMM_WORLD, ierr)
+            call MPI_BCAST(fluid_pp(i)%rho0, 1, mpi_p, 0, MPI_COMM_WORLD, ierr)
+            call MPI_BCAST(fluid_pp(i)%mg_a, 1, mpi_p, 0, MPI_COMM_WORLD, ierr)
+            call MPI_BCAST(fluid_pp(i)%einstein_cv(1), 2, mpi_p, 0, MPI_COMM_WORLD, ierr)
         end do
+
+        if (hypoplasticity) then
+            do i = 1, num_fluids_max
+                call MPI_BCAST(fluid_pp(i)%jcook(1), 11, mpi_p, 0, MPI_COMM_WORLD, ierr)
+            end do
+        end if
 
         #:for VAR in [ 'pref', 'rhoref', 'R0ref', 'poly_sigma', 'Web', 'Ca', &
             & 'Re_inv', 'sigma', 't_save', 't_stop', &

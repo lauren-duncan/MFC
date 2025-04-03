@@ -39,6 +39,8 @@ module m_rhs
 
     use m_hypoelastic
 
+    use m_hypoplastic
+
     use m_hyperelastic
 
     use m_acoustic_src
@@ -652,6 +654,13 @@ contains
                 end do
             end do
         end if
+
+        call nvtxStartRange("RHS-CONS-BUFFER")
+        if (model_eqns == 5) then
+            call s_populate_variables_buffers(q_cons_qp%vf, pb, mv)
+        end if
+        call nvtxEndRange
+
         call nvtxStartRange("RHS-CONVERT")
         call s_convert_conservative_to_primitive_variables( &
             q_cons_qp%vf, &
@@ -805,11 +814,16 @@ contains
                                                  q_prim_qp, &
                                                  flux_src_n(id))
             call nvtxEndRange
-
             ! RHS additions for hypoelasticity
             call nvtxStartRange("RHS-HYPOELASTICITY")
             if (hypoelasticity) call s_compute_hypoelastic_rhs(id, &
                                                                q_prim_qp%vf, &
+                                                               rhs_vf)
+            call nvtxEndRange
+            ! RHS additions for hypoplasticity
+            call nvtxStartRange("RHS_HYPOPLASTICITY")
+            if (hypoplasticity) call s_compute_hypoplastic_rhs(q_prim_qp%vf, &
+                                                               q_cons_qp%vf, &
                                                                rhs_vf)
             call nvtxEndRange
 

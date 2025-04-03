@@ -4,8 +4,11 @@
     real(wp) :: r, rmax, gam, umax, p0
     real(wp) :: rhoH, rhoL, pRef, pInt, h, lam, wl, amp, intH, intL, alph
 
-    eps = 1e-9_wp
+    real(wp) :: rcoord, theta, xi_polar
+    real(wp), dimension(num_dims) :: xi_cart
+    integer :: ii
 
+    eps = 1e-9_wp
 #:enddef
 
 #:def Hardcoded2D()
@@ -128,6 +131,18 @@
             q_prim_vf(advxb)%sf(i, j, 0) = patch_icpp(1)%alpha(1)
             q_prim_vf(advxe)%sf(i, j, 0) = patch_icpp(1)%alpha(2)
         end if
+
+    case (207) ! 2D hyperelastic pre_stress patch
+        rcoord = sqrt(x_cc(i)**2._wp + y_cc(j)**2._wp)
+        theta = atan2(y_cc(j), x_cc(i))
+        !polar coord, assuming Rmax=1
+        xi_polar = (rcoord**3._wp - R0ref**3._wp + Rinit**3._wp)**(1._wp/3._wp)
+        xi_cart(1) = xi_polar*cos(theta)
+        xi_cart(2) = xi_polar*sin(theta)
+        ! assigning the reference map to the q_prim vector field
+        do ii = 1, num_dims
+            q_prim_vf(ii + xibeg - 1)%sf(i, j, k) = xi_cart(ii)
+        end do
 
     case default
         if (proc_rank == 0) then

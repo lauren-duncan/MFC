@@ -1,4 +1,4 @@
-!>
+!
 !! @file m_derived_types.f90
 !! @brief Contains module m_derived_types
 
@@ -208,6 +208,7 @@ module m_derived_types
         real(wp) :: cv !<
         real(wp) :: qv !<
         real(wp) :: qvp !<
+        real(wp) :: e_ref !<
 
         !! Primitive variables associated with the patch. In order, these include
         !! the partial densities, density, velocity, pressure, volume fractions,
@@ -305,6 +306,11 @@ module m_derived_types
         real(wp) :: k_v     !< Bubble constants (see Preston (2007), Ando (2010))
         real(wp) :: cp_v
         real(wp) :: G
+        real(wp) :: rho0    !< Reference density of the material
+        real(wp), dimension(2) :: einstein_cv  !<Parameter for einstein model for calculating the specific heat
+        real(wp) :: mg_a
+        real(wp) :: mg_b
+        real(wp), dimension(11) :: jcook
     end type physical_parameters
 
     !> Derived type annexing the flow probe location

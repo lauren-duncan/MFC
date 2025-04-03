@@ -107,6 +107,9 @@ module m_global_parameters
     logical :: hypoelasticity  !< Turn hypoelasticity on
     logical :: hyperelasticity !< Turn hyperelasticity on
     logical :: elasticity      !< elasticity modeling, true for hyper or hypo
+    logical :: hypoplasticity  !< Turn on hypoplasticity
+    integer :: MGEoS_model     !< ShockEos (1), Complete Miegruneisen,(2),
+    !<JWLEoS(3), Cochran-Chan Eos(4)
     integer :: b_size          !< Number of components in the b tensor
     integer :: tensor_size     !< Number of components in the nonsymmetric tensor
     logical, parameter :: chemistry = .${chemistry}$. !< Chemistry modeling
@@ -296,6 +299,7 @@ module m_global_parameters
     integer :: bubxb, bubxe
     integer :: strxb, strxe
     integer :: xibeg, xiend
+    integer :: plasidx
     integer :: chemxb, chemxe
     !> @}
 
@@ -367,6 +371,11 @@ contains
             fluid_pp(i)%qv = 0._wp
             fluid_pp(i)%qvp = 0._wp
             fluid_pp(i)%G = dflt_real
+            fluid_pp(i)%rho0 = dflt_real
+            fluid_pp(i)%einstein_cv(:) = dflt_real
+            fluid_pp(i)%mg_a = dflt_real
+            fluid_pp(i)%mg_b = dflt_real
+            fluid_pp(i)%jcook(:) = dflt_real
         end do
 
         ! Formatted database file(s) structure parameters
@@ -649,9 +658,26 @@ contains
                     pref = 1._wp
                 end if
             end if
+
+        else if (model_eqns == 5) then
+            ! Annotating structure of the state and flux vectors belonging
+            ! to the system of equations defined by the selected number of
+            ! spatial dimensions and the volume fraction model
+
+            cont_idx%beg = 1
+            cont_idx%end = num_fluids
+            mom_idx%beg = cont_idx%end + 1
+            mom_idx%end = cont_idx%end + num_dims
+            E_idx = mom_idx%end + 1
+            adv_idx%beg = E_idx + 1
+            adv_idx%end = E_idx + num_fluids
+            !mgidxb = adv_idx%end + 1
+            !mgidxe = adv_idx%end + 3
+            sys_size = adv_idx%end !mgidxe
+
         end if
 
-        elasticity = hypoelasticity .or. hyperelasticity
+        elasticity = hypoelasticity .or. hyperelasticity .or. hypoplasticity
 
         if (elasticity) then
             stress_idx%beg = sys_size + 1
@@ -668,6 +694,20 @@ contains
             ! number of entries in the symmetric btensor plus the jacobian
             b_size = (num_dims*(num_dims + 1))/2 + 1
             tensor_size = num_dims**2 + 1
+        end if
+
+        if (hypoplasticity) then
+            ! number of stresses is 1 in 1D, 2 in quasi-1D, 3 in
+            ! 2D-plane stress, 4 in 2D-plane strain, 6 in 3D
+            ! TODO add more flags to incorporate all these cases
+
+            ! only implementing 2D-plane stress for now
+            plasidx = stress_idx%end + 1
+            sys_size = plasidx
+
+            ! Increase sys_size in post_process for accessing temperature
+            ! in s_convert_conservative_to_primitive
+            sys_size = sys_size + 1
         end if
 
         if (chemistry) then
