@@ -346,7 +346,7 @@ contains
             if (pres_wrt .or. prim_vars_wrt) dbvars = dbvars + 1
 
             ! Elastic stresses
-            if (tau_wrt .or. prim_vars_wrt) dbvars = dbvars + (num_dims*(num_dims + 1))/2
+            if (elasticity) dbvars = dbvars + (num_dims*(num_dims + 1))/2
 
             ! Damage state variable
             if (cont_damage) dbvars = dbvars + 1

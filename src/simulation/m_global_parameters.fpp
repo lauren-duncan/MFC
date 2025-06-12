@@ -1112,27 +1112,6 @@ contains
 
         ! END: Volume Fraction Model
 
-        elasticity = hypoelasticity .or. hyperelasticity
-
-        if (elasticity) then
-            ! creates stress indices for both hypo and hyperelasticity
-            stress_idx%beg = sys_size + 1
-            stress_idx%end = sys_size + (num_dims*(num_dims + 1))/2
-            ! number of distinct stresses is 1 in 1D, 3 in 2D, 6 in 3D
-            sys_size = stress_idx%end
-        end if
-
-        if (hyperelasticity) then
-            ! number of entries in the symmetric btensor plus the jacobian
-            b_size = (num_dims*(num_dims + 1))/2 + 1
-            ! storing the jacobian in the last entry
-            tensor_size = num_dims**2 + 1
-            xi_idx%beg = sys_size + 1
-            xi_idx%end = sys_size + num_dims
-            ! adding three more equations for the \xi field and the elastic energy
-            sys_size = xi_idx%end + 1
-        end if
-
         if (chemistry) then
             species_idx%beg = sys_size + 1
             species_idx%end = sys_size + num_species
