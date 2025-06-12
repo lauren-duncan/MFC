@@ -653,7 +653,10 @@ contains
         call nvtxEndRange
 
         call nvtxStartRange("RHS-ELASTIC")
-        if (hyperelasticity) call s_hyperelastic_rmt_stress_update(q_cons_qp%vf, q_prim_qp%vf)
+        if (hyperelasticity) then
+            call s_hyperelastic_rmt_stress_update(q_cons_qp%vf, q_prim_qp%vf)
+            call s_populate_variables_buffers(q_prim_qp%vf, pb, mv, bc_type)
+        end if
         call nvtxEndRange
 
         if (cfl_dt) then
@@ -692,7 +695,7 @@ contains
             call nvtxStartRange("RHS-WENO")
 
             if (.not. surface_tension) then
-                ! Reconstruct densitiess
+                ! Reconstruct densities
                 iv%beg = 1; iv%end = sys_size
                 call s_reconstruct_cell_boundary_values( &
                     q_prim_qp%vf(1:sys_size), &
