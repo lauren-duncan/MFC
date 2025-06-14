@@ -262,6 +262,15 @@ contains
                             q_prim_vf(i)%sf(0, k, l)
                     end do
                 end do
+                if (hyperelasticity) then
+                    do j = 1, buff_size
+                        do i = xibeg, xiend
+                            q_prim_vf(i)%sf(-j, k, l) = &
+                                q_prim_vf(i)%sf(0, k, l) - j*(x_cc(1) - x_cc(0))
+                        end do
+                    end do
+                end if
+
             else !< bc_x%end
                 do i = 1, sys_size
                     do j = 1, buff_size
@@ -269,7 +278,17 @@ contains
                             q_prim_vf(i)%sf(m, k, l)
                     end do
                 end do
+                if (hyperelasticity) then
+                    do j = 1, buff_size
+                        do i = xibeg, xiend
+                            q_prim_vf(i)%sf(m + j, k, l) = &
+                                q_prim_vf(i)%sf(m, k, l) + j*(x_cc(m) - x_cc(m - 1))
+                        end do
+                    end do
+                end if
+
             end if
+
         elseif (bc_dir == 2) then !< y-direction
             if (bc_loc == -1) then !< bc_y%beg
                 do i = 1, sys_size
@@ -278,6 +297,15 @@ contains
                             q_prim_vf(i)%sf(k, 0, l)
                     end do
                 end do
+                if (hyperelasticity) then
+                    do j = 1, buff_size
+                        do i = xibeg, xiend
+                            q_prim_vf(i)%sf(l, -j, k) = &
+                                q_prim_vf(i)%sf(l, 0, k) - j*(y_cc(1) - y_cc(0))
+                        end do
+                    end do
+                end if
+
             else !< bc_y%end
                 do i = 1, sys_size
                     do j = 1, buff_size
@@ -285,6 +313,16 @@ contains
                             q_prim_vf(i)%sf(k, n, l)
                     end do
                 end do
+
+                if (hyperelasticity) then
+                    do j = 1, buff_size
+                        do i = xibeg, xiend
+                            q_prim_vf(i)%sf(l, n + j, k) = &
+                                q_prim_vf(i)%sf(l, n, k) + j*(y_cc(n) - y_cc(n - 1))
+                        end do
+                    end do
+                end if
+
             end if
         elseif (bc_dir == 3) then !< z-direction
             if (bc_loc == -1) then !< bc_z%beg
@@ -294,6 +332,15 @@ contains
                             q_prim_vf(i)%sf(k, l, 0)
                     end do
                 end do
+                if (hyperelasticity) then
+                    do j = 1, buff_size
+                        do i = xibeg, xiend
+                            q_prim_vf(i)%sf(k, l, -j) = &
+                                q_prim_vf(i)%sf(k, l, 0) - j*(z_cc(1) - z_cc(0))
+                        end do
+                    end do
+                end if
+
             else !< bc_z%end
                 do i = 1, sys_size
                     do j = 1, buff_size
@@ -301,6 +348,15 @@ contains
                             q_prim_vf(i)%sf(k, l, p)
                     end do
                 end do
+                if (hyperelasticity) then
+                    do j = 1, buff_size
+                        do i = xibeg, xiend
+                            q_prim_vf(i)%sf(k, l, p + j) = &
+                                q_prim_vf(i)%sf(k, l, p) + j*(z_cc(p) - z_cc(p - 1))
+                        end do
+                    end do
+                end if
+
             end if
         end if
 
@@ -909,6 +965,9 @@ contains
                             q_prim_vf(i)%sf(-j, k, l) = &
                                 q_prim_vf(i)%sf(0, k, l)
                         end if
+                        if (hyperelasticity) then
+                            q_prim_vf(xibeg)%sf(-j, k, l) = x_cc(-j)
+                        end if
                     end do
                 end do
             else !< bc_x%end
@@ -927,6 +986,11 @@ contains
                             q_prim_vf(i)%sf(m + j, k, l) = &
                                 q_prim_vf(i)%sf(m, k, l)
                         end if
+                        if (hyperelasticity) then
+                            q_prim_vf(xibeg)%sf(m + j, k, l) = &
+                                x_cc(m + j)
+                        end if
+
                     end do
                 end do
             end if
@@ -947,6 +1011,13 @@ contains
                             q_prim_vf(i)%sf(k, -j, l) = &
                                 q_prim_vf(i)%sf(k, 0, l)
                         end if
+                        if (hyperelasticity) then
+
+                            q_prim_vf(xibeg + 1)%sf(l, -j, k) = &
+                                y_cc(-j)
+
+                        end if
+
                     end do
                 end do
             else !< bc_y%end
@@ -965,6 +1036,14 @@ contains
                             q_prim_vf(i)%sf(k, n + j, l) = &
                                 q_prim_vf(i)%sf(k, n, l)
                         end if
+
+                        if (hyperelasticity) then
+
+                            q_prim_vf(xibeg + 1)%sf(l, n + j, k) = &
+                                y_cc(n + j)
+
+                        end if
+
                     end do
                 end do
             end if
@@ -985,6 +1064,12 @@ contains
                             q_prim_vf(i)%sf(k, l, -j) = &
                                 q_prim_vf(i)%sf(k, l, 0)
                         end if
+                        if (hyperelasticity) then
+
+                            q_prim_vf(xiend)%sf(k, l, -j) = &
+                                z_cc(-j)
+
+                        end if
                     end do
                 end do
             else !< bc_z%end
@@ -1002,6 +1087,12 @@ contains
                         else
                             q_prim_vf(i)%sf(k, l, p + j) = &
                                 q_prim_vf(i)%sf(k, l, p)
+                        end if
+                        if (hyperelasticity) then
+
+                            q_prim_vf(xiend)%sf(k, l, p + j) = &
+                                z_cc(p + j)
+
                         end if
                     end do
                 end do

@@ -125,6 +125,7 @@ contains
                     !if ( G <= verysmall ) G_K = 0._wp
 
                     if (G > verysmall) then
+
                         !$acc loop seq
                         do i = 1, tensor_size - 1
                             tensora(i) = tensorb(i)/tensorb(tensor_size)
@@ -303,7 +304,11 @@ contains
         do i = 1, b_size - 1
             q_prim_vf(strxb + i - 1)%sf(j, k, l) = &
                 G*btensor(i)%sf(j, k, l)/btensor(b_size)%sf(j, k, l)
+
+            !print *, 'tau, i :: ',i,', ',q_prim_vf(strxb+i-1)%sf(j,k,l)
+
         end do
+
         ! compute the invariant without the elastic modulus
         q_prim_vf(xiend + 1)%sf(j, k, l) = &
             0.5_wp*(trace - 3.0_wp)/btensor(b_size)%sf(j, k, l)
