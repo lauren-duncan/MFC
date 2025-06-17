@@ -510,8 +510,6 @@ contains
                 xi_cart(1) = x_cc(j)
                 xi_cart(2) = y_cc(k)
                 xi_cart(3) = z_cc(l)
-            elseif (n > 0) then
-                xi_cart(2) = y_cc(k)
             end if
 
             ! assigning the reference map to the q_prim vector field
