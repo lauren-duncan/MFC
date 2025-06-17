@@ -122,13 +122,11 @@ contains
                                                                     alpha_rho_k, Re, G, Gs)
                     rho = max(rho, sgm_eps)
                     G = max(G, sgm_eps)
-                    !if ( G <= verysmall ) G_K = 0._wp
 
                     if (G > verysmall) then
-
                         !$acc loop seq
-                        do i = 1, tensor_size - 1
-                            tensora(i) = tensorb(i)/tensorb(tensor_size)
+                        do i = 1, tensor_size
+                            tensora(i) = 0._wp
                         end do
 
                         ! STEP 1: computing the grad_xi tensor using finite differences
@@ -202,6 +200,7 @@ contains
 
                             ! STEP 2d: computing the J = det(F) = 1/det(\grad{\xi})
                             tensorb(tensor_size) = 1._wp/tensorb(tensor_size)
+
                             ! STEP 3: update the btensor, this is consistent with Riemann solvers
                             ! \b_xx
                             btensor%vf(1)%sf(j, k, l) = tensorb(1)
