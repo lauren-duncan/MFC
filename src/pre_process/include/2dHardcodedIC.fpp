@@ -135,7 +135,7 @@
         amp = patch_icpp(patch_id)%a(2)
         h = 0.125_wp*amp
 
-        intH = amp/2_wp*(cos(2._wp*pi*y_cc(j)/lam))
+        intH = amp/2._wp*(cos(2._wp*pi*y_cc(j)/lam))
 
         alph = patch_icpp(2)%alpha(1) + (patch_icpp(1)%alpha(1) - patch_icpp(2)%alpha(1))/(h)*(x_cc(i) - (intH - h/2._wp))
 
