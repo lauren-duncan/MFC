@@ -960,7 +960,7 @@ contains
 
                             dW = -f/df_dW
                             W = W + dW
-                            if (abs(dW) < 1.e-12._wp*W) exit
+                            if (abs(dW) < 1.e-12_wp*W) exit
                         end do
 
                         ! Recalculate pressure using converged W
@@ -1131,9 +1131,9 @@ contains
                     if (hyperelasticity .and. p /= 0) then
                         ! to save von Mises stress instead of elastic internal energy
                         qK_prim_vf(xiend + 1)%sf(j, k, l) = sqrt((3._wp/2._wp)*(qK_prim_vf(strxb)%sf(j, k, l)**2._wp + &
-                                                                              2._wp*qK_prim_vf(strxb + 1)%sf(j, k, l)**2._wp + qK_prim_vf(strxb + 2)%sf(j, k, l)**2._wp + &
-                                                                              2._wp*qK_prim_vf(strxb + 3)%sf(j, k, l)**2._wp + 2._wp*qK_prim_vf(strxb + 4)%sf(j, k, l)**2._wp + &
-                                                                              qK_prim_vf(strxe)%sf(j, k, l)**2._wp))
+                                                                                2._wp*qK_prim_vf(strxb + 1)%sf(j, k, l)**2._wp + qK_prim_vf(strxb + 2)%sf(j, k, l)**2._wp + &
+                                                                                2._wp*qK_prim_vf(strxb + 3)%sf(j, k, l)**2._wp + 2._wp*qK_prim_vf(strxb + 4)%sf(j, k, l)**2._wp + &
+                                                                                qK_prim_vf(strxe)%sf(j, k, l)**2._wp))
                     end if
 #endif
 
