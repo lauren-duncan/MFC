@@ -42,9 +42,9 @@ jobs:
       run: |
         ! grep -iR -e '\.\.\.' -e '\-\-\-' -e '===' ./src/*
 
-    - name: Looking for all caps comments in source
+    - name: Looking for false integers
       run: |
-        ! grep -RE '^\s+[!]\s+[A-Z]{5}' ./src/*
+        ! grep -onRP '(?<![0-9.eE\-])\b[0-9]*_wp\b' src/
 
     - name: Looking for junk comments in examples
       run: |
