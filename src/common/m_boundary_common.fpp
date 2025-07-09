@@ -24,7 +24,7 @@ module m_boundary_common
     implicit none
 
     type(scalar_field), dimension(:, :), allocatable :: bc_buffers
-!$acc declare create(bc_buffers)
+    $:GPU_DECLARE(create='[bc_buffers]')
 
 #ifdef MFC_MPI
     integer, dimension(1:3, -1:1) :: MPI_BC_TYPE_TYPE, MPI_BC_BUFFER_TYPE
@@ -87,7 +87,7 @@ contains
         if (bc_x%beg >= 0) then
             call s_mpi_sendrecv_variables_buffers(q_prim_vf, 1, -1, sys_size, pb, mv)
         else
-            !$acc parallel loop collapse(2) gang vector default(present)
+            $:GPU_PARALLEL_LOOP(collapse=2)
             do l = 0, p
                 do k = 0, n
                     select case (int(bc_type(1, -1)%sf(0, k, l)))
@@ -116,7 +116,7 @@ contains
         if (bc_x%end >= 0) then
             call s_mpi_sendrecv_variables_buffers(q_prim_vf, 1, 1, sys_size, pb, mv)
         else
-            !$acc parallel loop collapse(2) gang vector default(present)
+            $:GPU_PARALLEL_LOOP(collapse=2)
             do l = 0, p
                 do k = 0, n
                     select case (int(bc_type(1, 1)%sf(0, k, l)))
@@ -149,7 +149,7 @@ contains
         if (bc_y%beg >= 0) then
             call s_mpi_sendrecv_variables_buffers(q_prim_vf, 2, -1, sys_size, pb, mv)
         else
-            !$acc parallel loop collapse(2) gang vector default(present)
+            $:GPU_PARALLEL_LOOP(collapse=2)
             do l = 0, p
                 do k = -buff_size, m + buff_size
                     select case (int(bc_type(2, -1)%sf(k, 0, l)))
@@ -181,7 +181,7 @@ contains
         if (bc_y%end >= 0) then
             call s_mpi_sendrecv_variables_buffers(q_prim_vf, 2, 1, sys_size, pb, mv)
         else
-            !$acc parallel loop collapse(2) gang vector default(present)
+            $:GPU_PARALLEL_LOOP(collapse=2)
             do l = 0, p
                 do k = -buff_size, m + buff_size
                     select case (int(bc_type(2, 1)%sf(k, 0, l)))
@@ -214,7 +214,7 @@ contains
         if (bc_z%beg >= 0) then
             call s_mpi_sendrecv_variables_buffers(q_prim_vf, 3, -1, sys_size, pb, mv)
         else
-            !$acc parallel loop collapse(2) gang vector default(present)
+            $:GPU_PARALLEL_LOOP(collapse=2)
             do l = -buff_size, n + buff_size
                 do k = -buff_size, m + buff_size
                     select case (int(bc_type(3, -1)%sf(k, l, 0)))
@@ -243,7 +243,7 @@ contains
         if (bc_z%end >= 0) then
             call s_mpi_sendrecv_variables_buffers(q_prim_vf, 3, 1, sys_size, pb, mv)
         else
-            !$acc parallel loop collapse(2) gang vector default(present)
+            $:GPU_PARALLEL_LOOP(collapse=2)
             do l = -buff_size, n + buff_size
                 do k = -buff_size, m + buff_size
                     select case (int(bc_type(3, 1)%sf(k, l, 0)))
@@ -273,11 +273,8 @@ contains
     end subroutine s_populate_variables_buffers
 
     pure subroutine s_ghost_cell_extrapolation(q_prim_vf, bc_dir, bc_loc, k, l)
-#ifdef _CRAYFTN
-        !DIR$ INLINEALWAYS s_ghost_cell_extrapolation
-#else
-        !$acc routine seq
-#endif
+        $:GPU_ROUTINE(function_name='s_ghost_cell_extrapolation', &
+            & parallelism='[seq]', cray_inline=True)
         type(scalar_field), dimension(sys_size), intent(inout) :: q_prim_vf
         integer, intent(in) :: bc_dir, bc_loc
         integer, intent(in) :: k, l
@@ -393,7 +390,7 @@ contains
     end subroutine s_ghost_cell_extrapolation
 
     pure subroutine s_symmetry(q_prim_vf, bc_dir, bc_loc, k, l, pb, mv)
-        !$acc routine seq
+        $:GPU_ROUTINE(parallelism='[seq]')
         type(scalar_field), dimension(sys_size), intent(inout) :: q_prim_vf
         real(wp), optional, dimension(idwbuff(1)%beg:, idwbuff(2)%beg:, idwbuff(3)%beg:, 1:, 1:), intent(inout) :: pb, mv
         integer, intent(in) :: bc_dir, bc_loc
@@ -653,7 +650,7 @@ contains
     end subroutine s_symmetry
 
     pure subroutine s_periodic(q_prim_vf, bc_dir, bc_loc, k, l, pb, mv)
-        !$acc routine seq
+        $:GPU_ROUTINE(parallelism='[seq]')
         type(scalar_field), dimension(sys_size), intent(inout) :: q_prim_vf
         real(wp), optional, dimension(idwbuff(1)%beg:, idwbuff(2)%beg:, idwbuff(3)%beg:, 1:, 1:), intent(inout) :: pb, mv
         integer, intent(in) :: bc_dir, bc_loc
@@ -792,7 +789,7 @@ contains
     end subroutine s_periodic
 
     pure subroutine s_axis(q_prim_vf, pb, mv, k, l)
-        !$acc routine seq
+        $:GPU_ROUTINE(parallelism='[seq]')
         type(scalar_field), dimension(sys_size), intent(inout) :: q_prim_vf
         real(wp), dimension(idwbuff(1)%beg:, idwbuff(2)%beg:, idwbuff(3)%beg:, 1:, 1:), intent(inout) :: pb, mv
         integer, intent(in) :: k, l
@@ -851,11 +848,8 @@ contains
     end subroutine s_axis
 
     pure subroutine s_slip_wall(q_prim_vf, bc_dir, bc_loc, k, l)
-#ifdef _CRAYFTN
-        !DIR$ INLINEALWAYS s_slip_wall
-#else
-        !$acc routine seq
-#endif
+        $:GPU_ROUTINE(function_name='s_slip_wall',parallelism='[seq]', &
+            & cray_inline=True)
         type(scalar_field), dimension(sys_size), intent(inout) :: q_prim_vf
         integer, intent(in) :: bc_dir, bc_loc
         integer, intent(in) :: k, l
@@ -945,11 +939,9 @@ contains
     end subroutine s_slip_wall
 
     pure subroutine s_no_slip_wall(q_prim_vf, bc_dir, bc_loc, k, l)
-#ifdef _CRAYFTN
-        !DIR$ INLINEALWAYS s_no_slip_wall
-#else
-        !$acc routine seq
-#endif
+        $:GPU_ROUTINE(function_name='s_no_slip_wall',parallelism='[seq]', &
+            & cray_inline=True)
+
         type(scalar_field), dimension(sys_size), intent(inout) :: q_prim_vf
         integer, intent(in) :: bc_dir, bc_loc
         integer, intent(in) :: k, l
@@ -1110,11 +1102,8 @@ contains
     end subroutine s_no_slip_wall
 
     pure subroutine s_dirichlet(q_prim_vf, bc_dir, bc_loc, k, l)
-#ifdef _CRAYFTN
-        !DIR$ INLINEALWAYS s_dirichlet
-#else
-        !$acc routine seq
-#endif
+        $:GPU_ROUTINE(function_name='s_dirichlet',parallelism='[seq]', &
+            & cray_inline=True)
         type(scalar_field), dimension(sys_size), intent(inout) :: q_prim_vf
         integer, intent(in) :: bc_dir, bc_loc
         integer, intent(in) :: k, l
@@ -1178,7 +1167,7 @@ contains
     end subroutine s_dirichlet
 
     pure subroutine s_qbmm_extrapolation(bc_dir, bc_loc, k, l, pb, mv)
-        !$acc routine seq
+        $:GPU_ROUTINE(parallelism='[seq]')
         real(wp), optional, dimension(idwbuff(1)%beg:, idwbuff(2)%beg:, idwbuff(3)%beg:, 1:, 1:), intent(inout) :: pb, mv
         integer, intent(in) :: bc_dir, bc_loc
         integer, intent(in) :: k, l
@@ -1260,7 +1249,7 @@ contains
         if (bc_x%beg >= 0) then
             call s_mpi_sendrecv_variables_buffers(c_divs, 1, -1, num_dims + 1)
         else
-            !$acc parallel loop collapse(2) gang vector default(present)
+            $:GPU_PARALLEL_LOOP(collapse=2)
             do l = 0, p
                 do k = 0, n
                     select case (bc_type(1, -1)%sf(0, k, l))
@@ -1278,7 +1267,7 @@ contains
         if (bc_x%end >= 0) then
             call s_mpi_sendrecv_variables_buffers(c_divs, 1, 1, num_dims + 1)
         else
-            !$acc parallel loop collapse(2) gang vector default(present)
+            $:GPU_PARALLEL_LOOP(collapse=2)
             do l = 0, p
                 do k = 0, n
                     select case (bc_type(1, 1)%sf(0, k, l))
@@ -1299,7 +1288,7 @@ contains
         if (bc_y%beg >= 0) then
             call s_mpi_sendrecv_variables_buffers(c_divs, 2, -1, num_dims + 1)
         else
-            !$acc parallel loop collapse(2) gang vector default(present)
+            $:GPU_PARALLEL_LOOP(collapse=2)
             do l = 0, p
                 do k = -buff_size, m + buff_size
                     select case (bc_type(2, -1)%sf(k, 0, l))
@@ -1317,7 +1306,7 @@ contains
         if (bc_y%end >= 0) then
             call s_mpi_sendrecv_variables_buffers(c_divs, 2, 1, num_dims + 1)
         else
-            !$acc parallel loop collapse(2) gang vector default(present)
+            $:GPU_PARALLEL_LOOP(collapse=2)
             do l = 0, p
                 do k = -buff_size, m + buff_size
                     select case (bc_type(2, 1)%sf(k, 0, l))
@@ -1338,7 +1327,7 @@ contains
         if (bc_z%beg >= 0) then
             call s_mpi_sendrecv_variables_buffers(c_divs, 3, -1, num_dims + 1)
         else
-            !$acc parallel loop collapse(2) gang vector default(present)
+            $:GPU_PARALLEL_LOOP(collapse=2)
             do l = -buff_size, n + buff_size
                 do k = -buff_size, m + buff_size
                     select case (bc_type(3, -1)%sf(k, l, 0))
@@ -1356,7 +1345,7 @@ contains
         if (bc_z%end >= 0) then
             call s_mpi_sendrecv_variables_buffers(c_divs, 3, 1, num_dims + 1)
         else
-            !$acc parallel loop collapse(2) gang vector default(present)
+            $:GPU_PARALLEL_LOOP(collapse=2)
             do l = -buff_size, n + buff_size
                 do k = -buff_size, m + buff_size
                     select case (bc_type(3, 1)%sf(k, l, 0))
@@ -1373,11 +1362,8 @@ contains
     end subroutine s_populate_capillary_buffers
 
     pure subroutine s_color_function_periodic(c_divs, bc_dir, bc_loc, k, l)
-#ifdef _CRAYFTN
-        !DIR$ INLINEALWAYS s_color_function_periodic
-#else
-        !$acc routine seq
-#endif
+        $:GPU_ROUTINE(function_name='s_color_function_periodic', &
+            & parallelism='[seq]', cray_inline=True)
         type(scalar_field), dimension(num_dims + 1), intent(inout) :: c_divs
         integer, intent(in) :: bc_dir, bc_loc
         integer, intent(in) :: k, l
@@ -1431,11 +1417,8 @@ contains
     end subroutine s_color_function_periodic
 
     pure subroutine s_color_function_reflective(c_divs, bc_dir, bc_loc, k, l)
-#ifdef _CRAYFTN
-        !DIR$ INLINEALWAYS s_color_function_reflective
-#else
-        !$acc routine seq
-#endif
+        $:GPU_ROUTINE(function_name='s_color_function_reflective', &
+            & parallelism='[seq]', cray_inline=True)
         type(scalar_field), dimension(num_dims + 1), intent(inout) :: c_divs
         integer, intent(in) :: bc_dir, bc_loc
         integer, intent(in) :: k, l
@@ -1513,11 +1496,8 @@ contains
     end subroutine s_color_function_reflective
 
     pure subroutine s_color_function_ghost_cell_extrapolation(c_divs, bc_dir, bc_loc, k, l)
-#ifdef _CRAYFTN
-        !DIR$ INLINEALWAYS s_color_function_ghost_cell_extrapolation
-#else
-        !$acc routine seq
-#endif
+        $:GPU_ROUTINE(function_name='s_color_function_ghost_cell_extrapolation', &
+            & parallelism='[seq]', cray_inline=True)
         type(scalar_field), dimension(num_dims + 1), intent(inout) :: c_divs
         integer, intent(in) :: bc_dir, bc_loc
         integer, intent(in) :: k, l
@@ -1729,7 +1709,7 @@ contains
         do dir = 1, num_dims
             do loc = -1, 1, 2
                 read (1) bc_type(dir, loc)%sf
-                !$acc update device(bc_type(dir, loc)%sf)
+                $:GPU_UPDATE(device='[bc_type(dir, loc)%sf]')
             end do
         end do
         close (1)
@@ -1745,7 +1725,7 @@ contains
         do dir = 1, num_dims
             do loc = -1, 1, 2
                 read (1) bc_buffers(dir, loc)%sf
-                !$acc update device(bc_buffers(dir, loc)%sf)
+                $:GPU_UPDATE(device='[bc_buffers(dir, loc)%sf]')
             end do
         end do
         close (1)
@@ -1795,7 +1775,7 @@ contains
                 call MPI_File_set_view(file_id, int(offset, KIND=MPI_ADDRESS_KIND), MPI_INTEGER, MPI_BC_TYPE_TYPE(dir, loc), 'native', MPI_INFO_NULL, ierr)
                 call MPI_File_read_all(file_id, bc_type(dir, loc)%sf, 1, MPI_BC_TYPE_TYPE(dir, loc), MPI_STATUS_IGNORE, ierr)
                 offset = offset + sizeof(bc_type(dir, loc)%sf)
-                !$acc update device(bc_type(dir, loc)%sf)
+                $:GPU_UPDATE(device='[bc_type(dir, loc)%sf]')
             end do
         end do
 
@@ -1805,7 +1785,7 @@ contains
                 call MPI_File_set_view(file_id, int(offset, KIND=MPI_ADDRESS_KIND), mpi_p, MPI_BC_BUFFER_TYPE(dir, loc), 'native', MPI_INFO_NULL, ierr)
                 call MPI_File_read_all(file_id, bc_buffers(dir, loc)%sf, 1, MPI_BC_BUFFER_TYPE(dir, loc), MPI_STATUS_IGNORE, ierr)
                 offset = offset + sizeof(bc_buffers(dir, loc)%sf)
-                !$acc update device(bc_buffers(dir, loc)%sf)
+                $:GPU_UPDATE(device='[bc_buffers(dir, loc)%sf]')
             end do
         end do
 
@@ -1858,17 +1838,17 @@ contains
 
         bc_type(1, -1)%sf(:, :, :) = bc_x%beg
         bc_type(1, 1)%sf(:, :, :) = bc_x%end
-        !$acc update device(bc_type(1,-1)%sf, bc_type(1,1)%sf)
+        $:GPU_UPDATE(device='[bc_type(1,-1)%sf,bc_type(1,1)%sf]')
 
         if (n > 0) then
             bc_type(2, -1)%sf(:, :, :) = bc_y%beg
             bc_type(2, 1)%sf(:, :, :) = bc_y%end
-            !$acc update device(bc_type(2,-1)%sf, bc_type(2,1)%sf)
+            $:GPU_UPDATE(device='[bc_type(2,-1)%sf,bc_type(2,1)%sf]')
 
             if (p > 0) then
                 bc_type(3, -1)%sf(:, :, :) = bc_z%beg
                 bc_type(3, 1)%sf(:, :, :) = bc_z%end
-                !$acc update device(bc_type(3,-1)%sf, bc_type(3,1)%sf)
+                $:GPU_UPDATE(device='[bc_type(3,-1)%sf,bc_type(3,1)%sf]')
             end if
         end if
 
