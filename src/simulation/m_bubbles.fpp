@@ -309,6 +309,8 @@ contains
             f_rddot_KM = tmp2/(fR*(1._wp - tmp1))
         else
             f_rddot_KM = tmp2/(fR*(1._wp - tmp1) + 4._wp*Re_inv/(fRho*fC))
+        else
+            f_rddot_KM = tmp2/(fR*(1._wp - tmp1) + 4._wp*Re_inv/(fRho*fC) - (g/2)*(5 - 4*(fR0/fR) - (fR0/fR)**4)
         end if
 
     end function f_rddot_KM
