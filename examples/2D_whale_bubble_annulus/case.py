@@ -169,6 +169,7 @@ print(
             "acoustic(1)%length": 9.0e09,
             "acoustic(1)%wavelength": 0.4,
             "rdma_mpi": "F",
+            "g": "T",
         }
     )
 )
