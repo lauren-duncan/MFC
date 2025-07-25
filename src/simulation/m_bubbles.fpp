@@ -282,10 +282,10 @@ contains
         !!  @param fV Current bubble velocity
         !!  @param fR0 Equilibrium bubble radius
         !!  @param fC Current sound speed
-    pure elemental function f_rddot_KM(fpbdot, fCp, fCpbw, fRho, fR, fV, fR0, fC,g)
+    pure elemental function f_rddot_KM(fpbdot, fCp, fCpbw, fRho, fR, fV, fR0, fC, g)
         $:GPU_ROUTINE(parallelism='[seq]')
         real(wp), intent(in) :: fpbdot, fCp, fCpbw
-        real(wp), intent(in) :: fRho, fR, fV, fR0, fC
+        real(wp), intent(in) :: fRho, fR, fV, fR0, fC, g
 
         real(wp) :: tmp1, tmp2, cdot_star
         real(wp) :: f_rddot_KM
@@ -307,7 +307,7 @@ contains
 
         if (f_is_default(Re_inv)) then
             f_rddot_KM = tmp2/(fR*(1._wp - tmp1))
-        else if g == "t"
+        else if (hyperelasticity) 
             f_rddot_KM = tmp2/(fR*(1._wp - tmp1) + 4._wp*Re_inv/(fRho*fC) - (g/2)*(5 - 4*(fR0/fR) - (fR0/fR)**4))
         else 
             f_rddot_KM = tmp2/(fR*(1._wp - tmp1) + 4._wp*Re_inv/(fRho*fC))
