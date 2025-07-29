@@ -756,10 +756,13 @@ contains
                              fCson)
 
         ! Estimate error
-        err_R = (-5._wp*h/24._wp)*(myV_tmp(2) + myV_tmp(3) - 2._wp*myV_tmp(4)) &
-                /max(abs(myR_tmp(1)), abs(myR_tmp(4)))
-        err_V = (-5._wp*h/24._wp)*(myA_tmp(2) + myA_tmp(3) - 2._wp*myA_tmp(4)) &
-                /max(abs(myV_tmp(1)), abs(myV_tmp(4)))
+err_R = (-5._wp*h/24._wp) * &
+        (myV_tmp(2) + myV_tmp(3) - 2._wp*myV_tmp(4)) / &
+        max(abs(myR_tmp(1)), abs(myR_tmp(4)))
+err_V = (-5._wp*h/24._wp) * &
+        (myA_tmp(2) + myA_tmp(3) - 2._wp*myA_tmp(4)) / &
+        max(abs(myV_tmp(1)), abs(myV_tmp(4)))
+
         ! Error correction for non-oscillating bubbles
         if (bubbles_lagrange .and. f_approx_equal(myA_tmp(1), 0._wp) .and. f_approx_equal(myA_tmp(2), 0._wp) .and. &
             f_approx_equal(myA_tmp(3), 0._wp) .and. f_approx_equal(myA_tmp(4), 0._wp)) then
