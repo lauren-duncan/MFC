@@ -309,7 +309,7 @@ contains
             f_rddot_KM = tmp2/(fR*(1._wp - tmp1))
         else 
             f_rddot_KM = tmp2/(fR*(1._wp - tmp1) + 4._wp*Re_inv/(fRho*fC))
-        else 
+        else if (hyperelasticity)
             f_rddot_KM = tmp2/(fR*(1._wp - tmp1) + 4._wp*Re_inv/(fRho*fC) - (G/2)*(5 - 4*(fR0/fR) - (fR0/fR)**4))
         end if
 
