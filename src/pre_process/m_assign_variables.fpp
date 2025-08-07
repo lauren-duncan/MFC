@@ -306,7 +306,7 @@ contains
         real(wp) :: muR, muV
         real(wp) :: R3bar
         real(wp) :: rcoord, theta, phi, xi_sph
-        real(wp), dimension(3) :: xi_cart
+        real(wp), dimension(num_dims) :: xi_cart
 
         real(wp), dimension(int(E_idx - mom_idx%beg)) :: vel    !< velocity
         real(wp) :: pres   !< pressure
@@ -489,12 +489,8 @@ contains
         ! Elastic Shear Stress
         if (hyperelasticity .and. .not. pre_stress) then
             xi_cart(1) = x_cc(j)
-            if (p > 0) then
-                xi_cart(2) = y_cc(k)
-                xi_cart(3) = z_cc(l)
-            elseif (n > 0) then
-                xi_cart(2) = y_cc(k)
-            end if
+            if (n > 0) xi_cart(2) = y_cc(k)
+            if (p > 0) xi_cart(3) = z_cc(l)
 
             ! assigning the reference map to the q_prim vector field
             do i = 1, num_dims
