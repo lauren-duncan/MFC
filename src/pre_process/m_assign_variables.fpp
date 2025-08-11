@@ -300,7 +300,7 @@ contains
         real(wp) :: muR, muV
         real(wp) :: R3bar
         real(wp) :: rcoord, theta, phi, xi_sph
-        real(wp), dimension(3) :: xi_cart
+        real(wp), dimension(num_dims) :: xi_cart
 
         real(wp) :: Ys(1:num_species)
 
@@ -341,10 +341,12 @@ contains
 
         ! Computing Mixture Variables of Current Patch
 
-        ! Volume fraction(s)
-        do i = adv_idx%beg, adv_idx%end
-            q_prim_vf(i)%sf(j, k, l) = patch_icpp(patch_id)%alpha(i - E_idx)
-        end do
+        if (.not. igr .or. num_fluids > 1) then
+            ! Volume fraction(s)
+            do i = adv_idx%beg, adv_idx%end
+                q_prim_vf(i)%sf(j, k, l) = patch_icpp(patch_id)%alpha(i - E_idx)
+            end do
+        end if
 
         if (mpp_lim .and. bubbles_euler) then
             !adjust volume fractions, according to modeled gas void fraction
@@ -384,10 +386,12 @@ contains
             end do
         end if
 
-        ! Volume fraction(s)
-        do i = adv_idx%beg, adv_idx%end
-            q_prim_vf(i)%sf(j, k, l) = patch_icpp(smooth_patch_id)%alpha(i - E_idx)
-        end do
+        if (.not. igr .or. num_fluids > 1) then
+            ! Volume fraction(s)
+            do i = adv_idx%beg, adv_idx%end
+                q_prim_vf(i)%sf(j, k, l) = patch_icpp(smooth_patch_id)%alpha(i - E_idx)
+            end do
+        end if
 
         if (mpp_lim .and. bubbles_euler) then
             !adjust volume fractions, according to modeled gas void fraction
@@ -405,8 +409,8 @@ contains
         ! Bubbles euler variables
         if (bubbles_euler) then
             do i = 1, nb
-                muR = R0(i)*patch_icpp(smooth_patch_id)%r0 ! = R0(i)
-                muV = V0(i)*patch_icpp(smooth_patch_id)%v0 ! = 0
+                muR = R0(i)*patch_icpp(smooth_patch_id)%r0
+                muV = patch_icpp(smooth_patch_id)%v0
                 if (qbmm) then
                     ! Initialize the moment set
                     if (dist_type == 1) then
@@ -458,12 +462,14 @@ contains
             (eta*patch_icpp(patch_id)%pres &
              + (1._wp - eta)*orig_prim_vf(E_idx))
 
-        ! Volume fractions \alpha
-        do i = adv_idx%beg, adv_idx%end
-            q_prim_vf(i)%sf(j, k, l) = &
-                eta*patch_icpp(patch_id)%alpha(i - E_idx) &
-                + (1._wp - eta)*orig_prim_vf(i)
-        end do
+        if (.not. igr .or. num_fluids > 1) then
+            ! Volume fractions \alpha
+            do i = adv_idx%beg, adv_idx%end
+                q_prim_vf(i)%sf(j, k, l) = &
+                    eta*patch_icpp(patch_id)%alpha(i - E_idx) &
+                    + (1._wp - eta)*orig_prim_vf(i)
+            end do
+        end if
 
         if (mhd) then
             if (n == 0) then ! 1D: By, Bz
@@ -497,22 +503,9 @@ contains
 
         ! Elastic Shear Stress
         if (hyperelasticity) then
-
-            if (pre_stress) then ! pre stressed initial condition in spatial domain
-                rcoord = sqrt((x_cc(j)**2 + y_cc(k)**2 + z_cc(l)**2))
-                theta = atan2(y_cc(k), x_cc(j))
-                phi = atan2(sqrt(x_cc(j)**2 + y_cc(k)**2), z_cc(l))
-                !spherical coord, assuming Rmax=1
-                xi_sph = (rcoord**3 - R0ref**3 + 1._wp)**(1._wp/3._wp)
-                xi_cart(1) = xi_sph*sin(phi)*cos(theta)
-                xi_cart(2) = xi_sph*sin(phi)*sin(theta)
-                xi_cart(3) = xi_sph*cos(phi)
-            else
-                xi_cart(1) = x_cc(j)
-                xi_cart(2) = y_cc(k)
-                xi_cart(3) = z_cc(l)
-            end if
-
+            xi_cart(1) = x_cc(j)
+            if (n > 0) xi_cart(2) = y_cc(k)
+            if (p > 0) xi_cart(3) = z_cc(l)
             ! assigning the reference map to the q_prim vector field
             do i = 1, num_dims
                 q_prim_vf(i + xibeg - 1)%sf(j, k, l) = eta*xi_cart(i) + &
@@ -610,8 +603,8 @@ contains
         ! Smoothed bubble variables
         if (bubbles_euler) then
             do i = 1, nb
-                muR = R0(i)*patch_icpp(patch_id)%r0 ! = 1*R0(i)
-                muV = V0(i)*patch_icpp(patch_id)%v0 ! = 1*V0(i)
+                muR = R0(i)*patch_icpp(patch_id)%r0
+                muV = patch_icpp(patch_id)%v0
                 if (qbmm) then
                     ! Initialize the moment set
                     if (dist_type == 1) then
@@ -630,12 +623,6 @@ contains
                         q_prim_vf(bub_idx%fullmom(i, 0, 2))%sf(j, k, l) = muV**2 + sigV**2
                     end if
                 else
-                    ! q_prim_vf(bub_idx%rs(i))%sf(j,k,l) = &
-                    !     (eta * R0(i)*patch_icpp(patch_id)%r0 &
-                    !     + (1._wp-eta)*orig_prim_vf(bub_idx%rs(i)))
-                    ! q_prim_vf(bub_idx%vs(i))%sf(j,k,l) = &
-                    !     (eta * V0(i)*patch_icpp(patch_id)%v0 &
-                    !     + (1._wp-eta)*orig_prim_vf(bub_idx%vs(i)))
                     q_prim_vf(bub_idx%rs(i))%sf(j, k, l) = muR
                     q_prim_vf(bub_idx%vs(i))%sf(j, k, l) = muV
 

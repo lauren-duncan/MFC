@@ -37,7 +37,7 @@ module m_riemann_solvers
 
     use m_bubbles_EE
 
-    use m_surface_tension      !< To get the capilary fluxes
+    use m_surface_tension      !< To get the capillary fluxes
 
     use m_helper_basic         !< Functions to compare floating point numbers
 
@@ -577,7 +577,7 @@ contains
                                     G_R = G_R*max((1._wp - qR_prim_rs${XYZ}$_vf(j, k, l, damage_idx)), 0._wp)
                                 end if
 
-                                !$acc loop seq
+                                $:GPU_LOOP(parallelism='[seq]')
                                 do i = 1, strxe - strxb + 1
                                     tau_e_L(i) = qL_prim_rs${XYZ}$_vf(j, k, l, strxb - 1 + i)
                                     tau_e_R(i) = qR_prim_rs${XYZ}$_vf(j + 1, k, l, strxb - 1 + i)
@@ -2881,7 +2881,7 @@ contains
         end if
 
         if (surface_tension) then
-            call s_compute_capilary_source_flux( &
+            call s_compute_capillary_source_flux( &
                 vel_src_rsx_vf, &
                 vel_src_rsy_vf, &
                 vel_src_rsz_vf, &
@@ -3163,7 +3163,7 @@ contains
         $:GPU_UPDATE(device='[Gs]')
 
         if (viscous) then
-            @:ALLOCATE(Res(1:2, 1:maxval(Re_size)))
+            @:ALLOCATE(Res(1:2, 1:Re_size_max))
         end if
 
         if (viscous) then
