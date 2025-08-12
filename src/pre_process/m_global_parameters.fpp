@@ -40,11 +40,15 @@ module m_global_parameters
     integer :: n
     integer :: p
 
-    integer(8) :: nGlobal !< Global number of cells in the domain
+    !> @name Max and min number of cells in a direction of each combination of x-,y-, and z-
+    type(cell_num_bounds) :: cells_bounds
+
+    integer(kind=8) :: nGlobal !< Global number of cells in the domain
 
     integer :: m_glb, n_glb, p_glb !< Global number of cells in each direction
 
     integer :: num_dims !< Number of spatial dimensions
+    integer :: num_vels !< Number of velocity components (different from num_dims for mhd)
 
     logical :: cyl_coord
     integer :: grid_geometry !< Cylindrical coordinates (either axisymmetric or full 3D)
@@ -77,19 +81,27 @@ module m_global_parameters
     integer :: model_eqns            !< Multicomponent flow model
     logical :: relax                 !< activate phase change
     integer :: relax_model           !< Relax Model
-    real(wp) :: palpha_eps    !< trigger parameter for the p relaxation procedure, phase change model
-    real(wp) :: ptgalpha_eps  !< trigger parameter for the pTg relaxation procedure, phase change model
+    real(wp) :: palpha_eps           !< trigger parameter for the p relaxation procedure, phase change model
+    real(wp) :: ptgalpha_eps         !< trigger parameter for the pTg relaxation procedure, phase change model
     integer :: num_fluids            !< Number of different fluids present in the flow
     logical :: mpp_lim               !< Alpha limiter
     integer :: sys_size              !< Number of unknowns in the system of equations
-    integer :: weno_polyn     !< Degree of the WENO polynomials (polyn)
+    integer :: recon_type            !< Reconstruction Type
+    integer :: weno_polyn            !< Degree of the WENO polynomials (polyn)
+    integer :: muscl_polyn           !< Degree of the MUSCL polynomials (polyn)
     integer :: weno_order            !< Order of accuracy for the WENO reconstruction
+    integer :: muscl_order           !< Order of accuracy for the MUSCL reconstruction
     logical :: hypoelasticity        !< activate hypoelasticity
     logical :: hyperelasticity       !< activate hyperelasticity
     logical :: elasticity            !< elasticity modeling, true for hyper or hypo
+    logical :: mhd                   !< Magnetohydrodynamics
+    logical :: relativity            !< Relativity for RMHD
     integer :: b_size                !< Number of components in the b tensor
     integer :: tensor_size           !< Number of components in the nonsymmetric tensor
     logical :: pre_stress            !< activate pre_stressed domain
+    logical :: cont_damage           !< continuum damage modeling
+    logical :: igr                   !< Use information geometric regularization
+    integer :: igr_order             !< IGR reconstruction order
     logical, parameter :: chemistry = .${chemistry}$. !< Chemistry modeling
 
     ! Annotations of the structure, i.e. the organization, of the state vectors
@@ -103,10 +115,12 @@ module m_global_parameters
     type(bub_bounds_info) :: bub_idx               !< Indexes of first & last bubble variable eqns.
     integer :: gamma_idx                           !< Index of specific heat ratio func. eqn.
     integer :: pi_inf_idx                          !< Index of liquid stiffness func. eqn.
+    type(int_bounds_info) :: B_idx                 !< Indexes of first and last magnetic field eqns.
     type(int_bounds_info) :: stress_idx            !< Indexes of elastic shear stress eqns.
     type(int_bounds_info) :: xi_idx                !< Indexes of first and last reference map eqns.
     integer :: c_idx                               !< Index of the color function
     type(int_bounds_info) :: species_idx           !< Indexes of first & last concentration eqns.
+    integer :: damage_idx                          !< Index of damage state variable (D) for continuum damage model
 
     ! Cell Indices for the (local) interior points (O-m, O-n, 0-p).
     ! Stands for "InDices With BUFFer".
@@ -120,14 +134,27 @@ module m_global_parameters
     type(int_bounds_info) :: bc_x, bc_y, bc_z !<
     !! Boundary conditions in the x-, y- and z-coordinate directions
 
+    integer :: shear_num !! Number of shear stress components
+    integer, dimension(3) :: shear_indices !<
+    !! Indices of the stress components that represent shear stress
+    integer :: shear_BC_flip_num !<
+    !! Number of shear stress components to reflect for boundary conditions
+    integer, dimension(3, 2) :: shear_BC_flip_indices !<
+    !! Indices of shear stress components to reflect for boundary conditions.
+    !! Size: (1:3, 1:shear_BC_flip_num) for (x/y/z, [indices])
+
     logical :: parallel_io !< Format of the data files
     logical :: file_per_process !< type of data output
     integer :: precision !< Precision of output files
+    logical :: down_sample !< Down-sample the output data
 
     logical :: mixlayer_vel_profile !< Set hyperbolic tangent streamwise velocity profile
     real(wp) :: mixlayer_vel_coef !< Coefficient for the hyperbolic tangent streamwise velocity profile
-    real(wp) :: mixlayer_domain !< Domain for the hyperbolic tangent streamwise velocity profile
     logical :: mixlayer_perturb !< Superimpose instability waves to surrounding fluid flow
+    integer :: mixlayer_perturb_nk  !< Number of Fourier modes for perturbation with mixlayer_perturb flag
+    real(wp) :: mixlayer_perturb_k0  !< Peak wavenumber of prescribed energy spectra with mixlayer_perturb flag
+                                     !! Default value (k0 = 0.4446) is most unstable mode obtained from linear stability analysis
+                                     !! See Michalke (1964, JFM) for details
 
     real(wp) :: pi_fac !< Factor for artificial pi_inf
 
@@ -165,8 +192,6 @@ module m_global_parameters
 
 #endif
 
-    integer, private :: ierr
-
     ! Initial Condition Parameters
     integer :: num_patches     !< Number of patches composing initial condition
 
@@ -175,6 +200,12 @@ module m_global_parameters
     !! patches employed in the configuration of the initial condition. Note that
     !! the maximum allowable number of patches, num_patches_max, may be changed
     !! in the module m_derived_types.f90.
+
+    integer :: num_bc_patches  !< Number of boundary condition patches
+    logical :: bc_io !< whether or not to save BC data
+    type(bc_patch_parameters), dimension(num_bc_patches_max) :: patch_bc
+    !! Database of the boundary condition patch parameters for each of the patches
+    !! employed in the configuration of the boundary conditions
 
     ! Fluids Physical Parameters
     type(physical_parameters), dimension(num_fluids_max) :: fluid_pp !<
@@ -189,7 +220,7 @@ module m_global_parameters
     integer :: nb
     real(wp) :: R0ref
     real(wp) :: Ca, Web, Re_inv
-    real(wp), dimension(:), allocatable :: weight, R0, V0
+    real(wp), dimension(:), allocatable :: weight, R0
     logical :: bubbles_euler
     logical :: qbmm      !< Quadrature moment method
     integer :: nmom  !< Number of carried moments
@@ -205,7 +236,7 @@ module m_global_parameters
 
     type(ib_patch_parameters), dimension(num_patches_max) :: patch_ib
 
-    type(probe_parameters), allocatable, dimension(:) :: airfoil_grid_u, airfoil_grid_l
+    type(vec3_dt), allocatable, dimension(:) :: airfoil_grid_u, airfoil_grid_l
     !! Database of the immersed boundary patch parameters for each of the
     !! patches employed in the configuration of the initial condition. Note that
     !! the maximum allowable number of patches, num_patches_max, may be changed
@@ -225,7 +256,6 @@ module m_global_parameters
     real(wp) :: gamma_m, gamma_n, mu_n
     real(wp) :: poly_sigma
     integer :: dist_type !1 = binormal, 2 = lognormal-normal
-    integer :: R0_type   !1 = simpson
     !> @}
 
     !> @name Surface Tension Modeling
@@ -246,14 +276,12 @@ module m_global_parameters
     integer :: chemxb, chemxe
     !> @}
 
-    !> @ lagrangian solver parameters
-    logical :: rkck_adap_dt
-    !> @}
-
     integer, allocatable, dimension(:, :, :) :: logic_grid
 
     type(pres_field) :: pb
     type(pres_field) :: mv
+
+    real(wp) :: Bx0 !< Constant magnetic field in the x-direction (1D)
 
     integer :: buff_size !<
     !! The number of cells that are necessary to be able to store enough boundary
@@ -265,7 +293,7 @@ contains
     !>  Assigns default values to user inputs prior to reading
         !!              them in. This allows for an easier consistency check of
         !!              these parameters once they are read from the input file.
-    subroutine s_assign_default_values_to_user_inputs
+    impure subroutine s_assign_default_values_to_user_inputs
 
         integer :: i !< Generic loop operator
 
@@ -283,6 +311,8 @@ contains
 
         ! Computational domain parameters
         m = dflt_int; n = 0; p = 0
+
+        call s_update_cell_bounds(cells_bounds, m, n, p)
 
         cyl_coord = .false.
 
@@ -317,7 +347,11 @@ contains
         palpha_eps = dflt_real
         ptgalpha_eps = dflt_real
         num_fluids = dflt_int
+        recon_type = WENO_TYPE
         weno_order = dflt_int
+        igr = .false.
+        igr_order = dflt_int
+        muscl_order = dflt_int
 
         hypoelasticity = .false.
         hyperelasticity = .false.
@@ -325,6 +359,10 @@ contains
         pre_stress = .false.
         b_size = dflt_int
         tensor_size = dflt_int
+        cont_damage = .false.
+
+        mhd = .false.
+        relativity = .false.
 
         bc_x%beg = dflt_int; bc_x%end = dflt_int
         bc_y%beg = dflt_int; bc_y%end = dflt_int
@@ -340,12 +378,14 @@ contains
         parallel_io = .false.
         file_per_process = .false.
         precision = 2
+        down_sample = .false.
         viscous = .false.
         bubbles_lagrange = .false.
         mixlayer_vel_profile = .false.
         mixlayer_vel_coef = 1._wp
-        mixlayer_domain = 1._wp
         mixlayer_perturb = .false.
+        mixlayer_perturb_nk = 100
+        mixlayer_perturb_k0 = 0.4446_wp
         perturb_flow = .false.
         perturb_flow_fluid = dflt_int
         perturb_flow_mag = dflt_real
@@ -392,6 +432,9 @@ contains
             patch_icpp(i)%qv = 0._wp
             patch_icpp(i)%qvp = 0._wp
             patch_icpp(i)%tau_e = 0._wp
+            patch_icpp(i)%Bx = dflt_real
+            patch_icpp(i)%By = dflt_real
+            patch_icpp(i)%Bz = dflt_real
             patch_icpp(i)%a(2) = dflt_real
             patch_icpp(i)%a(3) = dflt_real
             patch_icpp(i)%a(4) = dflt_real
@@ -414,6 +457,19 @@ contains
             if (chemistry) then
                 patch_icpp(i)%Y(:) = 0._wp
             end if
+        end do
+
+        num_bc_patches = 0
+        bc_io = .false.
+
+        do i = 1, num_bc_patches_max
+            patch_bc(i)%geometry = dflt_int
+            patch_bc(i)%type = dflt_int
+            patch_bc(i)%dir = dflt_int
+            patch_bc(i)%loc = dflt_int
+            patch_bc(i)%centroid(:) = dflt_real
+            patch_bc(i)%length(:) = dflt_real
+            patch_bc(i)%radius = dflt_real
         end do
 
         ! Tait EOS
@@ -443,7 +499,6 @@ contains
         sigV = dflt_real
         rhoRV = 0._wp
         dist_type = dflt_int
-        R0_type = dflt_int
 
         R_n = dflt_real
         R_v = dflt_real
@@ -502,18 +557,21 @@ contains
             fluid_pp(i)%G = 0._wp
         end do
 
-        ! Lagrangian solver
-        rkck_adap_dt = .false.
+        Bx0 = dflt_real
 
     end subroutine s_assign_default_values_to_user_inputs
 
     !> Computation of parameters, allocation procedures, and/or
         !! any other tasks needed to properly setup the module
-    subroutine s_initialize_global_parameters_module
+    impure subroutine s_initialize_global_parameters_module
 
         integer :: i, j, fac
 
-        weno_polyn = (weno_order - 1)/2
+        if (recon_type == WENO_TYPE) then
+            weno_polyn = (weno_order - 1)/2
+        elseif (recon_type == MUSCL_TYPE) then
+            muscl_polyn = muscl_order
+        end if
 
         ! Determining the layout of the state vectors and overall size of
         ! the system of equations, given the dimensionality and choice of
@@ -531,7 +589,7 @@ contains
             cont_idx%beg = 1
             cont_idx%end = cont_idx%beg
             mom_idx%beg = cont_idx%end + 1
-            mom_idx%end = cont_idx%end + num_dims
+            mom_idx%end = cont_idx%end + num_vels
             E_idx = mom_idx%end + 1
             adv_idx%beg = E_idx + 1
             adv_idx%end = adv_idx%beg + 1
@@ -548,10 +606,24 @@ contains
             cont_idx%beg = 1
             cont_idx%end = num_fluids
             mom_idx%beg = cont_idx%end + 1
-            mom_idx%end = cont_idx%end + num_dims
+            mom_idx%end = cont_idx%end + num_vels
             E_idx = mom_idx%end + 1
-            adv_idx%beg = E_idx + 1
-            adv_idx%end = E_idx + num_fluids
+
+            if (igr) then
+                ! Volume fractions are stored in the indices immediately following
+                ! the energy equation. IGR tracks a total of (N-1) volume fractions
+                ! for N fluids, hence the "-1" in adv_idx%end. If num_fluids = 1
+                ! then adv_idx%end < adv_idx%beg, which skips all loops over the
+                ! volume fractions since there is no volume fraction to track
+                adv_idx%beg = E_idx + 1
+                adv_idx%end = E_idx + num_fluids - 1
+            else
+                ! Volume fractions are stored in the indices immediately following
+                ! the energy equation. WENO/MUSCL + Riemann tracks a total of (N)
+                ! volume fractions for N fluids, hence the lack of  "-1" in adv_idx%end
+                adv_idx%beg = E_idx + 1
+                adv_idx%end = E_idx + num_fluids
+            end if
 
             sys_size = adv_idx%end
 
@@ -582,7 +654,7 @@ contains
                     sys_size = n_idx
                 end if
 
-                allocate (weight(nb), R0(nb), V0(nb))
+                allocate (weight(nb), R0(nb))
                 allocate (bub_idx%rs(nb), bub_idx%vs(nb))
                 allocate (bub_idx%ps(nb), bub_idx%ms(nb))
 
@@ -623,11 +695,7 @@ contains
                 if (nb == 1) then
                     weight(:) = 1._wp
                     R0(:) = 1._wp
-                    V0(:) = 1._wp
-                else if (nb > 1) then
-                    V0(:) = 1._wp
-                    !R0 and weight initialized in s_simpson
-                else
+                else if (nb < 1) then
                     stop 'Invalid value of nb'
                 end if
 
@@ -653,9 +721,14 @@ contains
                 end if
             end if
 
-            if (surface_tension) then
-                c_idx = sys_size + 1
-                sys_size = c_idx
+            if (mhd) then
+                B_idx%beg = sys_size + 1
+                if (n == 0) then
+                    B_idx%end = sys_size + 2 ! 1D: By, Bz
+                else
+                    B_idx%end = sys_size + 3 ! 2D/3D: Bx, By, Bz
+                end if
+                sys_size = B_idx%end
             end if
 
             ! Volume Fraction Model (6-equation model)
@@ -667,7 +740,7 @@ contains
             cont_idx%beg = 1
             cont_idx%end = num_fluids
             mom_idx%beg = cont_idx%end + 1
-            mom_idx%end = cont_idx%end + num_dims
+            mom_idx%end = cont_idx%end + num_vels
             E_idx = mom_idx%end + 1
             adv_idx%beg = E_idx + 1
             adv_idx%end = E_idx + num_fluids
@@ -675,17 +748,12 @@ contains
             internalEnergies_idx%end = adv_idx%end + num_fluids
             sys_size = internalEnergies_idx%end
 
-            if (surface_tension) then
-                c_idx = sys_size + 1
-                sys_size = c_idx
-            end if
-
         else if (model_eqns == 4) then
             ! 4 equation model with subgrid bubbles_euler
             cont_idx%beg = 1 ! one continuity equation
             cont_idx%end = 1 ! num_fluids
             mom_idx%beg = cont_idx%end + 1 ! one momentum equation in each direction
-            mom_idx%end = cont_idx%end + num_dims
+            mom_idx%end = cont_idx%end + num_vels
             E_idx = mom_idx%end + 1 ! one energy equation
             adv_idx%beg = E_idx + 1
             adv_idx%end = adv_idx%beg !one volume advection equation
@@ -702,7 +770,7 @@ contains
 
                 allocate (bub_idx%rs(nb), bub_idx%vs(nb))
                 allocate (bub_idx%ps(nb), bub_idx%ms(nb))
-                allocate (weight(nb), R0(nb), V0(nb))
+                allocate (weight(nb), R0(nb))
 
                 do i = 1, nb
                     if (.not. polytropic) then
@@ -723,10 +791,7 @@ contains
                 if (nb == 1) then
                     weight(:) = 1._wp
                     R0(:) = 1._wp
-                    V0(:) = 0._wp
-                else if (nb > 1) then
-                    V0(:) = 1._wp
-                else
+                else if (nb < 1) then
                     stop 'Invalid value of nb'
                 end if
 
@@ -738,24 +803,58 @@ contains
             end if
         end if
 
-        elasticity = hypoelasticity .or. hyperelasticity
+        if (model_eqns == 2 .or. model_eqns == 3) then
 
-        if (elasticity) then
-            ! creates stress indices for both hypo and hyperelasticity
-            stress_idx%beg = sys_size + 1
-            stress_idx%end = sys_size + (num_dims*(num_dims + 1))/2
-            ! number of stresses is 1 in 1D, 3 in 2D, 6 in 3D
-            sys_size = stress_idx%end
-        end if
+            if (hypoelasticity .or. hyperelasticity) then
+                elasticity = .true.
+                stress_idx%beg = sys_size + 1
+                stress_idx%end = sys_size + (num_dims*(num_dims + 1))/2
+                if (cyl_coord) stress_idx%end = stress_idx%end + 1
+                ! number of stresses is 1 in 1D, 3 in 2D, 4 in 2D-Axisym, 6 in 3D
+                sys_size = stress_idx%end
 
-        if (hyperelasticity) then
-            ! number of entries in the symmetric btensor plus the jacobian
-            b_size = (num_dims*(num_dims + 1))/2 + 1
-            tensor_size = num_dims**2 + 1
-            xi_idx%beg = sys_size + 1
-            xi_idx%end = sys_size + num_dims
-            ! adding three more equations for the \xi field and the elastic energy
-            sys_size = xi_idx%end + 1
+                ! shear stress index is 2 for 2D and 2,4,5 for 3D
+                if (num_dims == 1) then
+                    shear_num = 0
+                else if (num_dims == 2) then
+                    shear_num = 1
+                    shear_indices(1) = stress_idx%beg - 1 + 2
+                    shear_BC_flip_num = 1
+                    shear_BC_flip_indices(1:2, 1) = shear_indices(1)
+                    ! Both x-dir and y-dir: flip tau_xy only
+                else if (num_dims == 3) then
+                    shear_num = 3
+                    shear_indices(1:3) = stress_idx%beg - 1 + (/2, 4, 5/)
+                    shear_BC_flip_num = 2
+                    shear_BC_flip_indices(1, 1:2) = shear_indices((/1, 2/))
+                    shear_BC_flip_indices(2, 1:2) = shear_indices((/1, 3/))
+                    shear_BC_flip_indices(3, 1:2) = shear_indices((/2, 3/))
+                    ! x-dir: flip tau_xy and tau_xz
+                    ! y-dir: flip tau_xy and tau_yz
+                    ! z-dir: flip tau_xz and tau_yz
+                end if
+            end if
+
+            if (hyperelasticity) then
+                ! number of entries in the symmetric btensor plus the jacobian
+                b_size = (num_dims*(num_dims + 1))/2 + 1
+                tensor_size = num_dims**2 + 1
+                xi_idx%beg = sys_size + 1
+                xi_idx%end = sys_size + num_dims
+                ! adding three more equations for the \xi field and the elastic energy
+                sys_size = xi_idx%end + 1
+            end if
+
+            if (surface_tension) then
+                c_idx = sys_size + 1
+                sys_size = c_idx
+            end if
+
+            if (cont_damage) then
+                damage_idx = sys_size + 1
+                sys_size = damage_idx
+            end if
+
         end if
 
         if (chemistry) then
@@ -781,10 +880,11 @@ contains
         chemxb = species_idx%beg
         chemxe = species_idx%end
 
-        call s_configure_coordinate_bounds(weno_polyn, buff_size, &
+        call s_configure_coordinate_bounds(recon_type, weno_polyn, muscl_polyn, &
+                                           igr_order, buff_size, &
                                            idwint, idwbuff, viscous, &
                                            bubbles_lagrange, m, n, p, &
-                                           num_dims)
+                                           num_dims, igr)
 
 #ifdef MFC_MPI
 
@@ -796,10 +896,12 @@ contains
             allocate (MPI_IO_DATA%var(1:sys_size))
         end if
 
-        do i = 1, sys_size
-            allocate (MPI_IO_DATA%var(i)%sf(0:m, 0:n, 0:p))
-            MPI_IO_DATA%var(i)%sf => null()
-        end do
+        if (.not. down_sample) then
+            do i = 1, sys_size
+                allocate (MPI_IO_DATA%var(i)%sf(0:m, 0:n, 0:p))
+                MPI_IO_DATA%var(i)%sf => null()
+            end do
+        end if
         if (qbmm .and. .not. polytropic) then
             do i = sys_size + 1, sys_size + 2*nb*4
                 allocate (MPI_IO_DATA%var(i)%sf(0:m, 0:n, 0:p))
@@ -832,13 +934,25 @@ contains
             grid_geometry = 3
         end if
 
-        allocate (logic_grid(0:m, 0:n, 0:p))
+        if (.not. igr) then
+            allocate (logic_grid(0:m, 0:n, 0:p))
+        end if
 
     end subroutine s_initialize_global_parameters_module
 
-    subroutine s_initialize_parallel_io
+    impure subroutine s_initialize_parallel_io
+
+#ifdef MFC_MPI
+        integer :: ierr !< Generic flag used to identify and report MPI errors
+#endif
 
         num_dims = 1 + min(1, n) + min(1, p)
+
+        if (mhd) then
+            num_vels = 3
+        else
+            num_vels = num_dims
+        end if
 
         allocate (proc_coords(1:num_dims))
 
@@ -858,7 +972,7 @@ contains
 
     end subroutine s_initialize_parallel_io
 
-    subroutine s_finalize_global_parameters_module
+    impure subroutine s_finalize_global_parameters_module
 
         integer :: i
 
