@@ -302,9 +302,6 @@ contains
         real(wp) :: rcoord, theta, phi, xi_sph
         real(wp), dimension(num_dims) :: xi_cart
 
-        real(wp), dimension(int(E_idx - mom_idx%beg)) :: vel    !< velocity
-        real(wp) :: pres   !< pressure
-
         real(wp) :: Ys(1:num_species)
 
         real(wp), dimension(sys_size) :: orig_prim_vf !<

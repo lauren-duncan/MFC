@@ -221,7 +221,7 @@ if "post_process" in ARGS["mfc"]["targets"]:
         'pres_wrt'     : 'T', 'alpha_wrt(1)'    : 'T',
         'gamma_wrt'    : 'T', 'heat_ratio_wrt'  : 'T',
         'pi_inf_wrt'   : 'T', 'pres_inf_wrt'    : 'T',
-        'c_wrt'        : 'T', 'tau_wrt'         : 'T',
+        'c_wrt'        : 'T', 
     }}
 
     if case['p'] != 0:
