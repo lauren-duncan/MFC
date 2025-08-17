@@ -174,8 +174,8 @@ print(
             "patch_icpp(1)%alpha(2)": alphag_back,
             #'patch_icpp(1)%tau_e(1)'       : 0.0,
             # Patch 2: Lung
-            "patch_icpp(2)%geometry": 13,
-            "patch_icpp(2)%hcid": 301,
+            "patch_icpp(2)%geometry": 9,
+            "patch_icpp(2)%hcid": 303,
             #'patch_icpp(2)%geometry'       : 9,
             "patch_icpp(2)%alter_patch(1)": "T",
             "patch_icpp(2)%x_centroid": -998,  # -dlengx/4.,    #
