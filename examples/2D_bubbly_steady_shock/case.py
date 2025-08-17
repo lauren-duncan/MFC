@@ -203,7 +203,7 @@ print(
             "sigR": 0.1,
             "sigV": 0.3,
             "rhoRV": 0.0,
-            "G": "T",
+            "fluid_pp(1)%G": X,
         }
     )
 )
