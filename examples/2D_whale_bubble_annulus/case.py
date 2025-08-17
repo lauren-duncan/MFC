@@ -168,7 +168,7 @@ print(
             "acoustic(1)%length": 9.0e09,
             "acoustic(1)%wavelength": 0.4,
             "rdma_mpi": "F",
-            "G": "T",
+            "fluid_pp(1)%G": X,
         }
     )
 )
