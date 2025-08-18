@@ -29,6 +29,7 @@ gamma_n = 1.4
 M_n = 28.97
 mu_n = 1.8e-05
 k_n = 0.02556
+X = 0.0
 
 # air props
 # gamma_gas = gamma_n
