@@ -1001,7 +1001,8 @@ def list_cases() -> typing.List[TestCaseBuilder]:
                            "3D_hyper_bubingel", "3D_hyper_bubinwater", 
                            "1D_hyper_impact_strong", "1D_hyper_impact_weak", 
                            "1D_hypo_impact_strong", "1D_hypo_impact_weak",
-                           "3D_IGR_TaylorGreenVortex_nvidia",
+                           "1D_hyper_expansion_weak", "1D_hyper_expansion_strong",
+                           "3D_IGR_TaylorGreenVortex_nvidia", "3D_lungwave",
                            "2D_backward_facing_step",
                            "2D_forward_facing_step"]
             if path in casesToSkip:
