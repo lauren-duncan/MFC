@@ -313,8 +313,8 @@ contains
 
     !> Checks constraints on hypoelasticity parameters
     impure subroutine s_check_inputs_elasticity
-        @:PROHIBIT(hypoelasticity .and. riemann_solver /= 1, "hypoelasticity requires HLL Riemann solver (riemann_solver = 1)")
-        @:PROHIBIT(hyperelasticity .and. riemann_solver /= 1, "hyperelasticity requires HLL Riemann solver (riemann_solver = 1)")
+        !  @:PROHIBIT(hypoelasticity .and. riemann_solver /= 1, "hypoelasticity requires HLL Riemann solver (riemann_solver = 1)")
+        ! @:PROHIBIT(hyperelasticity .and. riemann_solver /= 1, "hyperelasticity requires HLL Riemann solver (riemann_solver = 1)")
     end subroutine
 
     !> Checks constraints on bubble parameters

@@ -15,6 +15,7 @@ u0 = math.sqrt(p0 / rho0)
 c0 = 1475.0
 X = 1e5 / p0
 
+
 n_tait = 7.1
 B_tait = 306.0e06 / p0
 gamma_gas = 1.4
@@ -23,10 +24,10 @@ pv = 2.3388e03
 # Cavitation number
 Ca = (p0 - pv) / (0.5 * rho0 * u0**2)
 
-Ly = 6.0 / x0
-Lx = 6.0 / x0
+Ly = 0.5 / x0
+Lx = 0.5 / x0
 
-Ny = 249
+Ny = 100
 Nx = Ny
 dx = Lx / float(Nx)
 dy = Ly / float(Ny)

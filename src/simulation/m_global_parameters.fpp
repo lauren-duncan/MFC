@@ -186,6 +186,7 @@ module m_global_parameters
     real(wp) :: ic_beta        !< THINC Sharpness Parameter
     integer :: hyper_model     !< hyperelasticity solver algorithm
     logical :: elasticity      !< elasticity modeling, true for hyper or hypo
+    logical :: sint_bub_elastic !<
     logical, parameter :: chemistry = .${chemistry}$. !< Chemistry modeling
     logical :: shear_stress  !< Shear stresses
     logical :: bulk_stress   !< Bulk stresses
@@ -618,6 +619,7 @@ contains
         ic_eps = dflt_ic_eps
         ic_beta = dflt_ic_beta
         elasticity = .false.
+        sint_bub_elastic = .false.
         hyper_model = dflt_int
         b_size = dflt_int
         tensor_size = dflt_int

@@ -307,9 +307,9 @@ contains
 
         if (f_is_default(Re_inv)) then
             f_rddot_KM = tmp2/(fR*(1._wp - tmp1))
-        else if (hyperelasticity) then
+        else if (sint_bub_elastic) then
             f_rddot_KM = tmp2/(fR*(1._wp - tmp1) + 4._wp*Re_inv/(fRho*fC) - (G/2)*(5 - 4*(fR0/fR) - (fR0/fR)**4))
-        else 
+        else
             f_rddot_KM = tmp2/(fR*(1._wp - tmp1) + 4._wp*Re_inv/(fRho*fC))
         end if
 
@@ -756,12 +756,12 @@ contains
                              fCson)
 
         ! Estimate error
-err_R = (-5._wp*h/24._wp) * &
-        (myV_tmp(2) + myV_tmp(3) - 2._wp*myV_tmp(4)) / &
-        max(abs(myR_tmp(1)), abs(myR_tmp(4)))
-err_V = (-5._wp*h/24._wp) * &
-        (myA_tmp(2) + myA_tmp(3) - 2._wp*myA_tmp(4)) / &
-        max(abs(myV_tmp(1)), abs(myV_tmp(4)))
+        err_R = (-5._wp*h/24._wp)* &
+                (myV_tmp(2) + myV_tmp(3) - 2._wp*myV_tmp(4))/ &
+                max(abs(myR_tmp(1)), abs(myR_tmp(4)))
+        err_V = (-5._wp*h/24._wp)* &
+                (myA_tmp(2) + myA_tmp(3) - 2._wp*myA_tmp(4))/ &
+                max(abs(myV_tmp(1)), abs(myV_tmp(4)))
 
         ! Error correction for non-oscillating bubbles
         if (bubbles_lagrange .and. f_approx_equal(myA_tmp(1), 0._wp) .and. f_approx_equal(myA_tmp(2), 0._wp) .and. &
