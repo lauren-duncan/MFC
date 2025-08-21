@@ -29,7 +29,7 @@ gamma_n = 1.4
 M_n = 28.97
 mu_n = 1.8e-05
 k_n = 0.02556
-X = 1e5 / p0
+X = 0.0
 
 # air props
 # gamma_gas = gamma_n
@@ -51,7 +51,6 @@ Re_inv = mul0 / (rho0 * uu * R0ref)
 
 vft = 1e-12
 vf0 = 1e-03
-X = 0
 
 cact = math.sqrt(n_tait * (p0 + p0 * B_tait) / ((1 - vf0) * rho0))
 cfl = 0.3
@@ -205,7 +204,6 @@ print(
             "sigR": 0.1,
             "sigV": 0.3,
             "rhoRV": 0.0,
-            "fluid_pp(1)%G": X,
         }
     )
 )

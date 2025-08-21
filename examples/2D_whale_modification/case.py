@@ -1,6 +1,10 @@
+#whale
+
 #!/usr/bin/env python2
 import math
 import json
+
+
 
 # Select type of simulation
 # restart_name = argv[2].strip()
@@ -22,10 +26,10 @@ pv = 2.3388e03
 # Cavitation number
 Ca = (p0 - pv) / (0.5 * rho0 * u0**2)
 
-Ly = 6.0 / x0
-Lx = 6.0 / x0
+Ly = 0.5 / x0
+Lx = 0.5 / x0
 
-Ny = 249
+Ny = 100
 Nx = Ny
 dx = Lx / float(Nx)
 dy = Ly / float(Ny)
@@ -81,7 +85,7 @@ print(
             "t_step_stop": 1000,
             "t_step_save": 10,
             # Simulation Algorithm Parameters
-            "num_patches": 3,
+            "num_patches": 2,    #B
             "model_eqns": 2,
             "alt_soundspeed": "F",
             "num_fluids": 1,
@@ -119,7 +123,6 @@ print(
             "patch_icpp(1)%v0": 0.0e00,
             # Patch 2
             "patch_icpp(2)%geometry": 2,
-            "patch_icpp(2)%alter_patch(1)": "T",
             "patch_icpp(2)%x_centroid": 0.0,
             "patch_icpp(2)%y_centroid": 0.0,
             "patch_icpp(2)%radius": 1.2,
@@ -130,19 +133,6 @@ print(
             "patch_icpp(2)%pres": 1.0,
             "patch_icpp(2)%r0": 1.0e00,
             "patch_icpp(2)%v0": 0.0e00,
-            "patch_icpp(3)%geometry": 2,
-            "patch_icpp(3)%x_centroid": 0.0,
-            "patch_icpp(3)%y_centroid": 0.0,
-            "patch_icpp(3)%radius": 0.8,
-            "patch_icpp(3)%alter_patch(1)": "T",
-            "patch_icpp(3)%alter_patch(2)": "T",
-            "patch_icpp(3)%alpha_rho(1)": (1 - vf0) * 1.0,
-            "patch_icpp(3)%vel(1)": 0.00,
-            "patch_icpp(3)%vel(2)": 0.00,
-            "patch_icpp(3)%pres": 1.0,
-            "patch_icpp(3)%alpha(1)": vf0,
-            "patch_icpp(3)%r0": 1.0e00,
-            "patch_icpp(3)%v0": 0.0e00,
             # Fluids Physical Parameters
             # Surrounding liquid
             "fluid_pp(1)%gamma": 1.0e00 / (n_tait - 1.0e00),
@@ -157,17 +147,6 @@ print(
             "R0ref": myr0,
             "nb": 1,
             "Ca": Ca,
-            "acoustic_source": "T",
-            "num_source": 1,
-            "acoustic(1)%support": 2,
-            "acoustic(1)%loc(1)": -1.5,
-            "acoustic(1)%loc(2)": 0.0,
-            "acoustic(1)%pulse": 1,
-            "acoustic(1)%npulse": 4,
-            "acoustic(1)%dir": 0.78539816339,
-            "acoustic(1)%mag": 1.0,
-            "acoustic(1)%length": 9.0e09,
-            "acoustic(1)%wavelength": 0.4,
             "rdma_mpi": "F",
             "fluid_pp(1)%G": X,
         }
