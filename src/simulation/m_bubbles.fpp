@@ -61,7 +61,7 @@ contains
         else if (bubble_model == 2) then
             ! Keller-Miksis bubbles
             fCpinf = fP
-            fCpbw = f_cpbw_KM(fR0, fR, fV, fpb)
+            fCpbw = f_cpbw_KM(fR0, fR, fV, fpb, fluid_pp(1)%G)
             if (bubbles_euler) then
                 c_liquid = sqrt(fntait*(fP + fBtait)/(fRho*(1._wp - alf)))
             else
@@ -70,7 +70,7 @@ contains
             f_rddot = f_rddot_KM(fpbdot, fCpinf, fCpbw, fRho, fR, fV, fR0, c_liquid, fluid_pp(1)%G)
         else if (bubble_model == 3) then
             ! Rayleigh-Plesset bubbles
-            fCpbw = f_cpbw_KM(fR0, fR, fV, fpb)
+            fCpbw = f_cpbw_KM(fR0, fR, fV, fpb, fluid_pp(1)%G)
             f_rddot = f_rddot_RP(fP, fRho, fR, fV, fCpbw)
         end if
 
@@ -255,9 +255,10 @@ contains
         !!  @param fR Current bubble radius
         !!  @param fV Current bubble velocity
         !!  @param fpb Internal bubble pressure
-    pure elemental function f_cpbw_KM(fR0, fR, fV, fpb)
+    pure elemental function f_cpbw_KM(fR0, fR, fV, fpb, G)
         $:GPU_ROUTINE(parallelism='[seq]')
         real(wp), intent(in) :: fR0, fR, fV, fpb
+        real(wp), intent(in), optional :: G
         real(wp) :: f_cpbw_KM
 
         if (polytropic) then
@@ -270,6 +271,7 @@ contains
 
         if (.not. f_is_default(Web)) f_cpbw_KM = f_cpbw_KM - 2._wp/(fR*Web)
         if (.not. f_is_default(Re_inv)) f_cpbw_KM = f_cpbw_KM - 4._wp*Re_inv*fV/fR
+        if (sint_bub_elastic) f_cpbw_KM = f_cpbw_KM - (G/2)*(5._wp - 4._wp*(fR0/fR) - (fR0/fR)**4._wp)
 
     end function f_cpbw_KM
 
@@ -299,6 +301,7 @@ contains
 
         if (.not. f_is_default(Web)) cdot_star = cdot_star + (2._wp/Web)*fV/(fR**2._wp)
         if (.not. f_is_default(Re_inv)) cdot_star = cdot_star + 4._wp*Re_inv*((fV/fR)**2._wp)
+        if (sint_bub_elastic) cdot_star = cdot_star - G*2._wp*(fV/fR*(fR0/fR + (fR0/fR)**4._wp))
 
         tmp1 = fV/fC
         tmp2 = 1.5_wp*(fV**2._wp)*(tmp1/3._wp - 1._wp) + &
@@ -307,8 +310,6 @@ contains
 
         if (f_is_default(Re_inv)) then
             f_rddot_KM = tmp2/(fR*(1._wp - tmp1))
-        else if (sint_bub_elastic) then
-            f_rddot_KM = tmp2/(fR*(1._wp - tmp1) + 4._wp*Re_inv/(fRho*fC) - (G/2)*(5 - 4*(fR0/fR) - (fR0/fR)**4))
         else
             f_rddot_KM = tmp2/(fR*(1._wp - tmp1) + 4._wp*Re_inv/(fRho*fC))
         end if
