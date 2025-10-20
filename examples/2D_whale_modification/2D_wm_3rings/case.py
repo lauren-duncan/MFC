@@ -1,4 +1,6 @@
-#!/usr/bin/env python2
+#another ring
+
+!/usr/bin/env python2
 import math
 import json
 
@@ -11,7 +13,7 @@ p0 = 101325.0
 rho0 = 1000.0
 u0 = math.sqrt(p0 / rho0)
 c0 = 1475.0
-G_tree = 100000
+G_tree = 1e5 / p0
 
 
 n_tait = 7.1
@@ -81,7 +83,7 @@ print(
             "t_step_stop": 1000,
             "t_step_save": 10,
             # Simulation Algorithm Parameters
-            "num_patches": 2,
+            "num_patches": 4,
             "model_eqns": 2,
             "sint_bub_elastic": "T",
             "alt_soundspeed": "F",
@@ -96,10 +98,10 @@ print(
             "riemann_solver": 2,
             "wave_speeds": 1,
             "avg_state": 2,
-            "bc_x%beg": -6,
-            "bc_x%end": -6,
-            "bc_y%beg": -6,
-            "bc_y%end": -6,
+            "bc_x%beg": -1,
+            "bc_x%end": -1,
+            "bc_y%beg": -1,
+            "bc_y%end": -1,
             # Formatted Database Files Structure Parameters
             "format": 1,
             "precision": 2,
@@ -131,46 +133,62 @@ print(
             "patch_icpp(2)%pres": 1.0,
             "patch_icpp(2)%r0": 1.0e00,
             "patch_icpp(2)%v0": 0.0e00,
-          #  "patch_icpp(3)%geometry": 2,
-          #  "patch_icpp(3)%x_centroid": 0.0,
-          #  "patch_icpp(3)%y_centroid": 0.0,
-          #  "patch_icpp(3)%radius": 0.8,
-          #  "patch_icpp(3)%alter_patch(1)": "T",
-          #  "patch_icpp(3)%alter_patch(2)": "T",
-          #  "patch_icpp(3)%alpha_rho(1)": (1 - vf0) * 1.0,
-          #  "patch_icpp(3)%vel(1)": 0.00,
-          #  "patch_icpp(3)%vel(2)": 0.00,
-          #  "patch_icpp(3)%pres": 1.0,
-          #  "patch_icpp(3)%alpha(1)": vf0,
-          #  "patch_icpp(3)%r0": 1.0e00,
-          #  "patch_icpp(3)%v0": 0.0e00,
+            "patch_icpp(3)%geometry": 2,
+            "patch_icpp(3)%x_centroid": 0.0,
+            "patch_icpp(3)%y_centroid": 0.0,
+            "patch_icpp(3)%radius": 0.8,
+            "patch_icpp(3)%alter_patch(1)": "T",
+            "patch_icpp(3)%alter_patch(2)": "T",
+            "patch_icpp(3)%alpha_rho(1)": (1 - vf0) * 1.0,
+            "patch_icpp(3)%vel(1)": 0.00,
+            "patch_icpp(3)%vel(2)": 0.00,
+            "patch_icpp(3)%pres": 1.0,
+            "patch_icpp(3)%alpha(1)": vf0,
+            "patch_icpp(3)%r0": 1.0e00,
+            "patch_icpp(3)%v0": 0.0e00,
+            #patch 3
+            "patch_icpp(4)%geometry": 2,
+            "patch_icpp(4)%x_centroid": 0.0,
+            "patch_icpp(4)%y_centroid": 0.0,
+            "patch_icpp(4)%radius": 1.5,
+            "patch_icpp(4)%alter_patch(1)": "T",
+            "patch_icpp(4)%alter_patch(2)": "T",
+            "patch_icpp(4)%alter_patch(3)": "T",
+            "patch_icpp(4)%alpha_rho(1)": (1 - vf0) * 1.0,
+            "patch_icpp(4)%vel(1)": 0.0,
+            "patch_icpp(4)%vel(2)": 0.0,
+            "patch_icpp(4)%pres": 1.0,
+            "patch_icpp(4)%alpha(1)": vf0,
+            "patch_icpp(4)%r0": 1.0e00,
+            "patch_icpp(4)%v0": 0.0e00,
+
             # Fluids Physical Parameters
             # Surrounding liquid
             "fluid_pp(1)%gamma": 1.0e00 / (n_tait - 1.0e00),
             "fluid_pp(1)%pi_inf": n_tait * B_tait / (n_tait - 1.0),
-            "fluid_pp(1)%G": G_tree,
             "fluid_pp(2)%gamma": 1.0 / (gamma_gas - 1.0),
             "fluid_pp(2)%pi_inf": 0.0e00,
             # Bubbles
             "bubbles_euler": "T",
-            "bubble_model": 2,
+            "bubble_model": 3,
             "polytropic": "T",
             "thermal": 3,
             "R0ref": myr0,
             "nb": 1,
             "Ca": Ca,
-           # "acoustic_source": "T",
-           # "num_source": 1,
-           # "acoustic(1)%support": 2,
-           # "acoustic(1)%loc(1)": -1.5,
-           # "acoustic(1)%loc(2)": 0.0,
-           # "acoustic(1)%pulse": 1,
-           # "acoustic(1)%npulse": 4,
-           # "acoustic(1)%dir": 0.78539816339,
-          #  "acoustic(1)%mag": 1.0,
-           # "acoustic(1)%length": 9.0e09,
-          #  "acoustic(1)%wavelength": 0.4,
+            "acoustic_source": "T",
+            "num_source": 1,
+            "acoustic(1)%support": 2,
+            "acoustic(1)%loc(1)": -1.5,
+            "acoustic(1)%loc(2)": 0.0,
+            "acoustic(1)%pulse": 1,
+            "acoustic(1)%npulse": 4,
+            "acoustic(1)%dir": 0.78539816339,
+            "acoustic(1)%mag": 1.0,
+            "acoustic(1)%length": 9.0e09,
+            "acoustic(1)%wavelength": 0.4,
             "rdma_mpi": "F",
+            "fluid_pp(1)%G": G_tree,
         }
     )
 )
