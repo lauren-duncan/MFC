@@ -64,7 +64,7 @@ bc_y = 3
 
 ang = 1.0
 
-myr0 = 1.0e00
+myr0 = 1.0e-4
 vf0 = 1.0e-12
 alf = 4.0e-3
 # Configuring case dictionary
