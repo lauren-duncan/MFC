@@ -8,8 +8,8 @@ import json
 # restart_name = argv[2].strip()
 
 
-G_tree_outer = 81733.84e3
-G_tree_inner= 87102.0e3
+G_tree_outer = 8e7
+G_tree_inner= 8e3
 
 # x0      = 10.E-06
 x0 = 1.0
@@ -64,8 +64,8 @@ bc_y = 3
 
 ang = 1.0
 
-myr0 = 1.0e-4
-vf0 = 1.0e-12
+myr0 = 1.0e-8
+vf0 = 1.0e-6
 alf = 4.0e-3
 # Configuring case dictionary
 print(
@@ -118,9 +118,9 @@ print(
             "patch_icpp(1)%y_centroid": 0.0,
             "patch_icpp(1)%length_x": Lx,
             "patch_icpp(1)%length_y": Ly,
-            "patch_icpp(1)%alpha(1)": 1.0 - 2.0 * vf0,
-            "patch_icpp(1)%alpha(2)": vf0,
-            "patch_icpp(1)%alpha(3)": vf0,
+            "patch_icpp(1)%alpha(1)": 1-2e-12,
+            "patch_icpp(1)%alpha(2)": 1e-12,
+            "patch_icpp(1)%alpha(3)": 1e-12,
             "patch_icpp(1)%alpha_rho(1)": (1.0 - 2.0 * vf0) * 1.0,  
             "patch_icpp(1)%alpha_rho(2)": vf0 * 1.0,
             "patch_icpp(1)%alpha_rho(3)": vf0 * 1.0,
@@ -130,7 +130,6 @@ print(
             "patch_icpp(1)%r0": 1.0e00,
             "patch_icpp(1)%v0": 0.0e00,
             #patch 2
-            "patch_icpp(2)%alpha(1)": vf0,
             "patch_icpp(2)%alpha_rho(1)": (1 - vf0) * 1.0,
             "patch_icpp(2)%geometry": 2,
             "patch_icpp(2)%x_centroid": 0.0,
@@ -138,9 +137,9 @@ print(
             "patch_icpp(2)%radius": 1.5,
             "patch_icpp(2)%alter_patch(1)": "T",
             
-            "patch_icpp(2)%alpha(1)": 1.0 - 2.0 * vf0 - alf,
-            "patch_icpp(2)%alpha(2)": vf0,
-            "patch_icpp(2)%alpha(3)": alf,
+            "patch_icpp(2)%alpha(1)": 1e-12,
+            "patch_icpp(2)%alpha(2)": 1-2e-12,
+            "patch_icpp(2)%alpha(3)": 1e-12,
             "patch_icpp(2)%alpha_rho(1)": (1.0 - 2.0 * vf0 - alf) * 1.0,
             "patch_icpp(2)%alpha_rho(2)": vf0 * 1.0,
             "patch_icpp(2)%alpha_rho(3)": alf * 1.0,
@@ -158,12 +157,12 @@ print(
             "patch_icpp(3)%y_centroid": 0.0,
             "patch_icpp(3)%radius": 1.2,
 
-            "patch_icpp(3)%alpha(1)": 1.0 - 2.0 * vf0 - alf,
-            "patch_icpp(3)%alpha(2)": alf,
-            "patch_icpp(3)%alpha(3)": vf0,
+            "patch_icpp(3)%alpha(1)": 0,
+            "patch_icpp(3)%alpha(2)": 0,
+            "patch_icpp(3)%alpha(3)": 1e-12,
             "patch_icpp(3)%alpha_rho(1)": (1.0 - 2.0 * vf0 - alf) * 1.0,
             "patch_icpp(3)%alpha_rho(2)": alf * 1.0,
-            "patch_icpp(3)%alpha_rho(3)": vf0 * 1.0,
+            "patch_icpp(3)%alpha_rho(3)": 1.0,
             
             "patch_icpp(3)%vel(1)": 0.0,
             "patch_icpp(3)%vel(2)": 0.0,
@@ -181,9 +180,10 @@ print(
             "bubbles_euler": "T",
             "bubble_model": 3,
             "polytropic": "T",
+            "polydisperse": "F",
             "thermal": 3,
             "R0ref": myr0,
-            "nb": 1,
+            "nb": int(1),
             "Ca": Ca,
 
             "rdma_mpi": "F",
