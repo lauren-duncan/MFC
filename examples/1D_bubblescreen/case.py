@@ -29,7 +29,7 @@ k_n = 0.02556
 gamma_gas = gamma_n
 
 # reference bubble size
-R0ref = 10.0e-06
+R0ref = 10.0e-12
 
 pa = 0.1 * 1.0e06 / 101325.0
 
