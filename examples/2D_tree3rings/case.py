@@ -7,13 +7,8 @@ import json
 # restart_name = argv[2].strip()
 
 
-<<<<<<< HEAD:examples/thesis/2D_3rings/case.py
 G_tree_outer = 8e7
 G_tree_inner = 8e3
-=======
-G_tree_outer = 8e3 * 0
-G_tree_inner = 8e3 * 0
->>>>>>> 5a091f10c7d7ff75a07795d83a2ac627c22a91ae:examples/2D_tree3rings/case.py
 
 # x0      = 10.E-06
 x0 = 1.0
@@ -108,51 +103,29 @@ print(
             "patch_icpp(1)%y_centroid": 0.0,
             "patch_icpp(1)%length_x": Lx,
             "patch_icpp(1)%length_y": Ly,
-<<<<<<< HEAD:examples/thesis/2D_3rings/case.py
-            "patch_icpp(1)%alpha(1)": 1 - 2e-12,
-            "patch_icpp(1)%alpha(2)": 1e-12,
-            "patch_icpp(1)%alpha(3)": 1e-12,
-            "patch_icpp(1)%alpha_rho(1)": (1.0 - 2.0 * vf0) * 1.0,
-            "patch_icpp(1)%alpha_rho(2)": vf0 * 1.0,
-            "patch_icpp(1)%alpha_rho(3)": vf0 * 1.0,
-=======
             "patch_icpp(1)%alpha(1)": 1e00 - 2 * epsilon,
             "patch_icpp(1)%alpha(2)": epsilon,
             "patch_icpp(1)%alpha(3)": epsilon,
             "patch_icpp(1)%alpha_rho(1)": (1e00 - 2 * epsilon),
             "patch_icpp(1)%alpha_rho(2)": rho_tree * epsilon,
             "patch_icpp(1)%alpha_rho(3)": rho_tree * epsilon,
->>>>>>> 5a091f10c7d7ff75a07795d83a2ac627c22a91ae:examples/2D_tree3rings/case.py
             "patch_icpp(1)%vel(1)": 0.0,
             "patch_icpp(1)%vel(2)": 0.00,
             "patch_icpp(1)%pres": 1.0 * 2,
             "patch_icpp(1)%r0": 1.0e00,
             "patch_icpp(1)%v0": 0.0e00,
             # patch 2
-<<<<<<< HEAD:examples/thesis/2D_3rings/case.py
-            "patch_icpp(2)%alpha_rho(1)": (1 - vf0) * 1.0,
-=======
->>>>>>> 5a091f10c7d7ff75a07795d83a2ac627c22a91ae:examples/2D_tree3rings/case.py
             "patch_icpp(2)%geometry": 2,
             "patch_icpp(2)%x_centroid": 0.0,
             "patch_icpp(2)%y_centroid": 0.0,
             "patch_icpp(2)%radius": 1.5,
             "patch_icpp(2)%alter_patch(1)": "T",
-<<<<<<< HEAD:examples/thesis/2D_3rings/case.py
-            "patch_icpp(2)%alpha(1)": 1e-12,
-            "patch_icpp(2)%alpha(2)": 1 - 2e-12,
-            "patch_icpp(2)%alpha(3)": 1e-12,
-            "patch_icpp(2)%alpha_rho(1)": (1.0 - 2.0 * vf0 - alf) * 1.0,
-            "patch_icpp(2)%alpha_rho(2)": vf0 * 1.0,
-            "patch_icpp(2)%alpha_rho(3)": alf * 1.0,
-=======
             "patch_icpp(2)%alpha(1)": epsilon,
             "patch_icpp(2)%alpha(2)": 1.0e00 - 2 * epsilon,
             "patch_icpp(2)%alpha(3)": epsilon,
             "patch_icpp(2)%alpha_rho(1)": epsilon,
             "patch_icpp(2)%alpha_rho(2)": rho_tree * (1e00 - 2 * epsilon),
             "patch_icpp(2)%alpha_rho(3)": rho_tree * epsilon,
->>>>>>> 5a091f10c7d7ff75a07795d83a2ac627c22a91ae:examples/2D_tree3rings/case.py
             "patch_icpp(2)%vel(1)": 0.0,
             "patch_icpp(2)%vel(2)": 0.0,
             "patch_icpp(2)%pres": 1.0,
@@ -164,35 +137,17 @@ print(
             "patch_icpp(3)%x_centroid": 0.0,
             "patch_icpp(3)%y_centroid": 0.0,
             "patch_icpp(3)%radius": 1.2,
-<<<<<<< HEAD:examples/thesis/2D_3rings/case.py
-            "patch_icpp(3)%alpha(1)": 0,
-            "patch_icpp(3)%alpha(2)": 0,
-            "patch_icpp(3)%alpha(3)": 1e-12,
-            "patch_icpp(3)%alpha_rho(1)": (1.0 - 2.0 * vf0 - alf) * 1.0,
-            "patch_icpp(3)%alpha_rho(2)": alf * 1.0,
-            "patch_icpp(3)%alpha_rho(3)": 1.0,
-=======
             "patch_icpp(3)%alpha(1)": epsilon,
             "patch_icpp(3)%alpha(2)": epsilon,
             "patch_icpp(3)%alpha(3)": 1e00 - 2 * epsilon,
             "patch_icpp(3)%alpha_rho(1)": epsilon,
             "patch_icpp(3)%alpha_rho(2)": rho_tree * epsilon,
             "patch_icpp(3)%alpha_rho(3)": rho_tree * (1e00 - 2 * epsilon),
->>>>>>> 5a091f10c7d7ff75a07795d83a2ac627c22a91ae:examples/2D_tree3rings/case.py
             "patch_icpp(3)%vel(1)": 0.0,
             "patch_icpp(3)%vel(2)": 0.0,
             "patch_icpp(3)%pres": 1.0,
             "patch_icpp(3)%r0": 1.0e00,
             "patch_icpp(3)%v0": 0.0e00,
-<<<<<<< HEAD:examples/thesis/2D_3rings/case.py
-            # Fluids Physical Parameters
-            # Surrounding liquid
-            "fluid_pp(1)%gamma": 1.0e00 / (n_tait - 1.0e00),
-            "fluid_pp(1)%pi_inf": n_tait * B_tait / (n_tait - 1.0),
-            "fluid_pp(2)%gamma": 1.0 / (gamma_gas - 1.0),
-            "fluid_pp(2)%pi_inf": 0.0e00,
-=======
->>>>>>> 5a091f10c7d7ff75a07795d83a2ac627c22a91ae:examples/2D_tree3rings/case.py
             # Bubbles
             "bubbles_euler": "T",
             "bubble_model": 3,
@@ -203,18 +158,11 @@ print(
             "nb": int(1),
             "Ca": Ca,
             "rdma_mpi": "F",
-<<<<<<< HEAD:examples/thesis/2D_3rings/case.py
-            # 3modify patches with exchange, change fluid properties
-            # fluid 1 elasticity
-            "fluid_pp(1)%gamma": 1.0 / (n_tait - 1.0),
-            "fluid_pp(1)%pi_inf": n_tait * B_tait / (n_tait - 1.0),
-=======
             # fluids physical parameters
             # fluid 1 elasticity
             "fluid_pp(1)%gamma": 1.0 / (n_tait - 1.0),
             "fluid_pp(1)%pi_inf": n_tait * B_tait / (n_tait - 1.0),
             "fluid_pp(1)%G": 0.0e00,
->>>>>>> 5a091f10c7d7ff75a07795d83a2ac627c22a91ae:examples/2D_tree3rings/case.py
             # fluid 2 elasitcity
             "fluid_pp(2)%gamma": 1.0 / (n_tait - 1.0),
             "fluid_pp(2)%pi_inf": n_tait * B_tait / (n_tait - 1.0),
