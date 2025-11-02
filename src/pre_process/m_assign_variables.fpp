@@ -102,8 +102,8 @@ contains
         !! @param eta pseudo volume fraction
         !! @param q_prim_vf Primitive variables
         !! @param patch_id_fp Array to track patch ids
-    pure subroutine s_assign_patch_mixture_primitive_variables(patch_id, j, k, l, &
-                                                               eta, q_prim_vf, patch_id_fp)
+    subroutine s_assign_patch_mixture_primitive_variables(patch_id, j, k, l, &
+                                                          eta, q_prim_vf, patch_id_fp)
         $:GPU_ROUTINE(parallelism='[seq]')
 
         integer, intent(in) :: patch_id
@@ -191,7 +191,7 @@ contains
     !! @param k the y-dir node index
     !! @param l the z-dir node index
     !! @param q_prim_vf Primitive variables
-    pure subroutine s_perturb_primitive(j, k, l, q_prim_vf)
+    subroutine s_perturb_primitive(j, k, l, q_prim_vf)
 
         integer, intent(in) :: j, k, l
         type(scalar_field), dimension(1:sys_size), intent(inout) :: q_prim_vf
@@ -672,7 +672,7 @@ contains
 
         if (surface_tension) then
             q_prim_vf(c_idx)%sf(j, k, l) = eta*patch_icpp(patch_id)%cf_val + &
-                                           (1._wp - eta)*patch_icpp(smooth_patch_id)%cf_val
+                                           (1._wp - eta)*orig_prim_vf(c_idx)
         end if
 
         ! Updating the patch identities bookkeeping variable

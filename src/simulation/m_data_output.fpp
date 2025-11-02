@@ -157,23 +157,15 @@ contains
         write (3, '(A)') ''; write (3, '(A)') ''
 
         ! Generating table header for the stability criteria to be outputted
-        if (cfl_dt) then
-            if (viscous) then
-                write (3, '(A)') '     Time-steps        dt     = Time         ICFL '// &
-                    'Max      VCFL Max        Rc Min       ='
-            else
-                write (3, '(A)') '            Time-steps                dt       Time '// &
-                    '               ICFL Max              '
-            end if
-        else
-            if (viscous) then
-                write (3, '(A)') '     Time-steps        Time         ICFL '// &
-                    'Max      VCFL Max        Rc Min        '
-            else
-                write (3, '(A)') '            Time-steps                Time '// &
-                    '               ICFL Max              '
-            end if
+        write (3, '(13X,A9,13X,A10,13X,A10,13X,A10)', advance="no") &
+            trim('Time-step'), trim('dt'), trim('Time'), trim('ICFL Max')
+
+        if (viscous) then
+            write (3, '(13X,A10,13X,A16)', advance="no") &
+                trim('VCFL Max'), trim('Rc Min')
         end if
+
+        write (3, *) ! new line
 
     end subroutine s_open_run_time_information_file
 
@@ -287,23 +279,24 @@ contains
         integer :: j, k, l
 
         ! Computing Stability Criteria at Current Time-step
-        $:GPU_PARALLEL_LOOP(collapse=3, private='[vel, alpha, Re]')
-        do l = 0, p
-            do k = 0, n
-                do j = 0, m
-                    call s_compute_enthalpy(q_prim_vf, pres, rho, gamma, pi_inf, Re, H, alpha, vel, vel_sum, j, k, l)
+        #:call GPU_PARALLEL_LOOP(collapse=3, private='[vel, alpha, Re]')
+            do l = 0, p
+                do k = 0, n
+                    do j = 0, m
+                        call s_compute_enthalpy(q_prim_vf, pres, rho, gamma, pi_inf, Re, H, alpha, vel, vel_sum, j, k, l)
 
-                    call s_compute_speed_of_sound(pres, rho, gamma, pi_inf, H, alpha, vel_sum, 0._wp, c)
+                        call s_compute_speed_of_sound(pres, rho, gamma, pi_inf, H, alpha, vel_sum, 0._wp, c)
 
-                    if (viscous) then
-                        call s_compute_stability_from_dt(vel, c, rho, Re, j, k, l, icfl_sf, vcfl_sf, Rc_sf)
-                    else
-                        call s_compute_stability_from_dt(vel, c, rho, Re, j, k, l, icfl_sf)
-                    end if
+                        if (viscous) then
+                            call s_compute_stability_from_dt(vel, c, rho, Re, j, k, l, icfl_sf, vcfl_sf, Rc_sf)
+                        else
+                            call s_compute_stability_from_dt(vel, c, rho, Re, j, k, l, icfl_sf)
+                        end if
 
+                    end do
                 end do
             end do
-        end do
+        #:endcall GPU_PARALLEL_LOOP
 
         ! end: Computing Stability Criteria at Current Time-step
 
@@ -358,15 +351,16 @@ contains
 
         ! Outputting global stability criteria extrema at current time-step
         if (proc_rank == 0) then
+            write (3, '(13X,I9,13X,F10.6,13X,F10.6,13X,F10.6)', advance="no") &
+                t_step, dt, mytime, icfl_max_glb
+
             if (viscous) then
-                write (3, '(6X,I8,F10.6,6X,6X,F10.6,6X,F9.6,6X,F9.6,6X,F10.6)') &
-                    t_step, dt, t_step*dt, icfl_max_glb, &
+                write (3, '(13X,F10.6,13X,ES16.6)', advance="no") &
                     vcfl_max_glb, &
                     Rc_min_glb
-            else
-                write (3, '(13X,I8,14X,F10.6,14X,F10.6,13X,F9.6)') &
-                    t_step, dt, t_step*dt, icfl_max_glb
             end if
+
+            write (3, *) ! new line
 
             if (.not. f_approx_equal(icfl_max_glb, icfl_max_glb)) then
                 call s_mpi_abort('ICFL is NaN. Exiting.')
@@ -623,7 +617,7 @@ contains
                 open (2, FILE=trim(file_path))
                 do j = 0, m
                     do k = 0, n
-                        write (2, FMT) x_cb(j), y_cb(k), beta%sf(0:m, 0:n, 0)
+                        write (2, FMT) x_cb(j), y_cb(k), beta%sf(j, k, 0)
                     end do
                     write (2, *)
                 end do
