@@ -67,7 +67,7 @@ contains
             else
                 c_liquid = fCson
             end if
-            f_rddot = f_rddot_KM(fpbdot, fCpinf, fCpbw, fRho, fR, fV, fR0, c_liquid, fluid_pp(1)%G)
+            f_rddot = f_rddot_KM(fpbdot, fCpinf, fCpbw, fRho, fR, fV, fR0, c_liquid)
         else if (bubble_model == 3) then
             ! Rayleigh-Plesset bubbles
             fCpbw = f_cpbw_KM(fR0, fR, fV, fpb)
@@ -289,7 +289,7 @@ contains
     elemental function f_rddot_KM(fpbdot, fCp, fCpbw, fRho, fR, fV, fR0, fC)
         $:GPU_ROUTINE(parallelism='[seq]')
         real(wp), intent(in) :: fpbdot, fCp, fCpbw
-        real(wp), intent(in) :: fRho, fR, fV, fR0, fC, G
+        real(wp), intent(in) :: fRho, fR, fV, fR0, fC
 
         real(wp) :: tmp1, tmp2, cdot_star
         real(wp) :: f_rddot_KM
@@ -305,7 +305,7 @@ contains
         if (.not. f_is_default(Web)) cdot_star = cdot_star + (2._wp/Web)*fV/(fR**2._wp)
         if (.not. f_is_default(Re_inv)) cdot_star = cdot_star + 4._wp*Re_inv*((fV/fR)**2._wp)
         if (sint_bub_elastic) then
-            cdot_star = cdot_star - G*2._wp*(fV/fR*(fR0/fR + (fR0/fR)**4._wp))
+            cdot_star = cdot_star - fluid_pp(1)%G*2._wp*(fV/fR*(fR0/fR + (fR0/fR)**4._wp))
             !  WRITE(cmd, '(A, F8.2)') 'Calculated result: ', cdot_star
         end if
 
