@@ -11,7 +11,6 @@ p0 = 101325.0
 rho0 = 1000.0
 u0 = math.sqrt(p0 / rho0)
 c0 = 1475.0
-X = 1e5 / p0
 
 
 n_tait = 7.1
@@ -132,11 +131,11 @@ print(
             "patch_icpp(2)%v0": 0.0e00,
             # Patch 3
             "patch_icpp(3)%geometry": 2,
-            "patch_icpp(3)%alter_patch(1)": "T",
-            "patch_icpp(3)%alter_patch(2)": "T",
             "patch_icpp(3)%x_centroid": 0.0,
             "patch_icpp(3)%y_centroid": 0.0,
             "patch_icpp(3)%radius": 0.8,
+            "patch_icpp(3)%alter_patch(1)": "T",
+            "patch_icpp(3)%alter_patch(2)": "T",
             "patch_icpp(3)%alpha_rho(1)": (1 - vf0) * 1.0,
             "patch_icpp(3)%vel(1)": 0.00,
             "patch_icpp(3)%vel(2)": 0.00,
@@ -170,7 +169,6 @@ print(
             "acoustic(1)%length": 9.0e09,
             "acoustic(1)%wavelength": 0.4,
             "rdma_mpi": "F",
-            "fluid_pp(1)%G": X,
         }
     )
 )
