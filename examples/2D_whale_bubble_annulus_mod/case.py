@@ -24,7 +24,7 @@ Ca = (p0 - pv) / (0.5 * rho0 * u0**2)
 Ly = 6.0 / x0
 Lx = 6.0 / x0
 
-Ny = 249
+Ny = 349
 Nx = Ny
 dx = Lx / float(Nx)
 dy = Ly / float(Ny)
@@ -46,7 +46,7 @@ ang = 1.0
 
 myr0 = 1e-6
 vf0 = 1.0e-12
-alf = 1.0e-3
+alf = 1.0e-1
 # Configuring case dictionary
 print(
     json.dumps(
@@ -117,19 +117,19 @@ print(
             "patch_icpp(2)%r0": 1.0,
             "patch_icpp(2)%v0": 0.0e00,
             # Patch 3
-            #"patch_icpp(3)%geometry": 2,
-            #"patch_icpp(3)%x_centroid": 0.0,
-            #"patch_icpp(3)%y_centroid": 0.0,
-            #"patch_icpp(3)%radius": 0.8,
-            #"patch_icpp(3)%alter_patch(1)": "T",
-            #"patch_icpp(3)%alter_patch(2)": "T",
-            #"patch_icpp(3)%alpha_rho(1)": (1 - vf0),
-            #"patch_icpp(3)%vel(1)": 0.00,
-            #"patch_icpp(3)%vel(2)": 0.00,
-            #"patch_icpp(3)%pres": 1.0,
-            #"patch_icpp(3)%alpha(1)": vf0,
-            #"patch_icpp(3)%r0": 1.0e00,
-            #"patch_icpp(3)%v0": 0.0e00,
+            # "patch_icpp(3)%geometry": 2,
+            # "patch_icpp(3)%x_centroid": 0.0,
+            # "patch_icpp(3)%y_centroid": 0.0,
+            # "patch_icpp(3)%radius": 0.8,
+            # "patch_icpp(3)%alter_patch(1)": "T",
+            # "patch_icpp(3)%alter_patch(2)": "T",
+            # "patch_icpp(3)%alpha_rho(1)": (1 - vf0),
+            # "patch_icpp(3)%vel(1)": 0.00,
+            # "patch_icpp(3)%vel(2)": 0.00,
+            # "patch_icpp(3)%pres": 1.0,
+            # "patch_icpp(3)%alpha(1)": vf0,
+            # "patch_icpp(3)%r0": 1.0e00,
+            # "patch_icpp(3)%v0": 0.0e00,
             # Fluids Physical Parameters
             # Surrounding liquid
             "fluid_pp(1)%gamma": 1.0e00 / (n_tait - 1.0e00),
@@ -144,7 +144,7 @@ print(
             "R0ref": myr0,
             "nb": 1,
             "Ca": Ca,
-            "acoustic_source": "F",
+            "acoustic_source": "T",
             "num_source": 1,
             "acoustic(1)%support": 2,
             "acoustic(1)%loc(1)": -1.5,
