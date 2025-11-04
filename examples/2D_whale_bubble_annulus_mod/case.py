@@ -24,7 +24,7 @@ Ca = (p0 - pv) / (0.5 * rho0 * u0**2)
 Ly = 6.0 / x0
 Lx = 6.0 / x0
 
-Ny = 349
+Ny = 399
 Nx = Ny
 dx = Lx / float(Nx)
 dy = Ly / float(Ny)
@@ -44,9 +44,9 @@ Nt = t_save * Nfiles
 
 ang = 1.0
 
-myr0 = 1e-6
+myr0 = 1e0
 vf0 = 1.0e-12
-alf = 1.0e-1
+alf = 1.0e-3
 # Configuring case dictionary
 print(
     json.dumps(
@@ -64,10 +64,10 @@ print(
             "p": 0,
             "dt": dt,
             "t_step_start": 0,
-            "t_step_stop": 500,
-            "t_step_save": 10,
+            "t_step_stop": 1000,
+            "t_step_save": 20,
             # Simulation Algorithm Parameters
-            "num_patches": 2,
+            "num_patches": 3,
             "model_eqns": 2,
             "alt_soundspeed": "F",
             "num_fluids": 1,
@@ -114,22 +114,22 @@ print(
             "patch_icpp(2)%vel(1)": 0.0,
             "patch_icpp(2)%vel(2)": 0.0,
             "patch_icpp(2)%pres": 1.0,
-            "patch_icpp(2)%r0": 1.0,
+            "patch_icpp(2)%r0": 1.0e0,
             "patch_icpp(2)%v0": 0.0e00,
             # Patch 3
-            # "patch_icpp(3)%geometry": 2,
-            # "patch_icpp(3)%x_centroid": 0.0,
-            # "patch_icpp(3)%y_centroid": 0.0,
-            # "patch_icpp(3)%radius": 0.8,
-            # "patch_icpp(3)%alter_patch(1)": "T",
-            # "patch_icpp(3)%alter_patch(2)": "T",
-            # "patch_icpp(3)%alpha_rho(1)": (1 - vf0),
-            # "patch_icpp(3)%vel(1)": 0.00,
-            # "patch_icpp(3)%vel(2)": 0.00,
-            # "patch_icpp(3)%pres": 1.0,
-            # "patch_icpp(3)%alpha(1)": vf0,
-            # "patch_icpp(3)%r0": 1.0e00,
-            # "patch_icpp(3)%v0": 0.0e00,
+            "patch_icpp(3)%geometry": 2,
+            "patch_icpp(3)%x_centroid": 0.0,
+            "patch_icpp(3)%y_centroid": 0.0,
+            "patch_icpp(3)%radius": 0.8,
+            "patch_icpp(3)%alter_patch(1)": "T",
+            "patch_icpp(3)%alter_patch(2)": "T",
+            "patch_icpp(3)%alpha_rho(1)": (1 - vf0),
+            "patch_icpp(3)%vel(1)": 0.00,
+            "patch_icpp(3)%vel(2)": 0.00,
+            "patch_icpp(3)%pres": 1.0,
+            "patch_icpp(3)%alpha(1)": vf0,
+            "patch_icpp(3)%r0": 1.0e00,
+            "patch_icpp(3)%v0": 0.0e00,
             # Fluids Physical Parameters
             # Surrounding liquid
             "fluid_pp(1)%gamma": 1.0e00 / (n_tait - 1.0e00),
@@ -140,21 +140,26 @@ print(
             "bubbles_euler": "T",
             "bubble_model": 3,
             "polytropic": "T",
+            "polydisperse": "T",
             "thermal": 3,
             "R0ref": myr0,
-            "nb": 1,
+            "nb": 11,
+            "poly_sigma": 0.3,
             "Ca": Ca,
+            "Re_inv": 0.1,
+            "Web": 300,
             "acoustic_source": "T",
             "num_source": 1,
             "acoustic(1)%support": 2,
             "acoustic(1)%loc(1)": -1.5,
             "acoustic(1)%loc(2)": 0.0,
             "acoustic(1)%pulse": 1,
-            "acoustic(1)%npulse": 4,
+            "acoustic(1)%npulse": 10,
             "acoustic(1)%dir": 0.78539816339,
             "acoustic(1)%mag": 0.1,
             "acoustic(1)%length": 9.0e09,
-            "acoustic(1)%wavelength": 0.4,
+            # "acoustic(1)%wavelength": 0.2,
+            "acoustic(1)%frequency": 1e3,
             "rdma_mpi": "F",
         }
     )
