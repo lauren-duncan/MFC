@@ -44,6 +44,7 @@ COMMON = {
     'rhoref': ParamType.REAL,
     'bubbles_euler': ParamType.LOG,
     'Re_inv': ParamType.REAL,
+    'Cau_inv': ParamType.REAL,
     'n': ParamType.INT,
     'precision': ParamType.INT,
     'Ca': ParamType.REAL,

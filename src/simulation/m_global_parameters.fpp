@@ -420,7 +420,8 @@ module m_global_parameters
     real(wp) :: Ca       !< Cavitation number
     real(wp) :: Web      !< Weber number
     real(wp) :: Re_inv   !< Inverse Reynolds number
-    $:GPU_DECLARE(create='[R0ref,Ca,Web,Re_inv]')
+    real(wp) :: Cau_inv   !< Inverse Cauchy number
+    $:GPU_DECLARE(create='[R0ref,Ca,Web,Re_inv,Cau_inv]')
 
     real(wp), dimension(:), allocatable :: weight !< Simpson quadrature weights
     real(wp), dimension(:), allocatable :: R0     !< Bubble sizes
@@ -723,6 +724,7 @@ contains
 
         Ca = dflt_real
         Re_inv = dflt_real
+        Cau_inv = dflt_real
         Web = dflt_real
         poly_sigma = dflt_real
 
@@ -1331,7 +1333,7 @@ contains
 
         $:GPU_ENTER_DATA(copyin='[nb,R0ref,Ca,Web,Re_inv,weight,R0, &
             & bubbles_euler,polytropic,polydisperse,qbmm, &
-            & ptil,bubble_model,thermal,poly_sigma]')
+            & ptil,bubble_model,thermal,poly_sigma,Cau_inv]')
         $:GPU_ENTER_DATA(copyin='[R_n,R_v,phi_vn,phi_nv,Pe_c,Tw,pv, &
             & M_n,M_v,k_n,k_v,pb0,mass_n0,mass_v0,Pe_T, &
             & Re_trans_T,Re_trans_c,Im_trans_T,Im_trans_c,omegaN, &

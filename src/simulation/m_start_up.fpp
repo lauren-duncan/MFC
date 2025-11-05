@@ -187,7 +187,7 @@ contains
             alf_factor, num_igr_iters, num_igr_warm_start_iters, &
             int_comp, ic_eps, ic_beta, nv_uvm_out_of_core, &
             nv_uvm_igr_temps_on_gpu, nv_uvm_pref_gpu, down_sample, fft_wrt, &
-            sint_bub_elastic
+            sint_bub_elastic, Cau_inv
 
         ! Checking that an input file has been provided by the user. If it
         ! has, then the input file is read in, otherwise, simulation exits.
@@ -1489,7 +1489,8 @@ contains
         $:GPU_UPDATE(device='[nb,R0ref,Ca,Web,Re_inv,weight,R0, &
             & bubbles_euler,polytropic,polydisperse,qbmm, &
             & ptil,bubble_model,thermal,poly_sigma,adv_n,adap_dt, &
-            & adap_dt_tol,adap_dt_max_iters,n_idx,pi_fac,low_Mach]')
+            & adap_dt_tol,adap_dt_max_iters,n_idx,pi_fac,low_Mach, & 
+            & Cau_inv]')
         $:GPU_UPDATE(device='[R_n,R_v,phi_vn,phi_nv,Pe_c,Tw,pv,M_n, &
             & M_v,k_n,k_v,pb0,mass_n0,mass_v0,Pe_T,Re_trans_T, &
             & Re_trans_c,Im_trans_T,Im_trans_c,omegaN,mul0,ss, &

@@ -304,7 +304,7 @@ module m_global_parameters
     !> @{
     integer :: nb
     real(wp) :: R0ref
-    real(wp) :: Ca, Web, Re_inv
+    real(wp) :: Ca, Web, Re_inv, Cau_inv
     real(wp), dimension(:), allocatable :: weight, R0
     logical :: bubbles_euler
     logical :: qbmm

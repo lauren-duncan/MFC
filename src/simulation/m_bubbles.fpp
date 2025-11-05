@@ -273,7 +273,7 @@ contains
 
         if (.not. f_is_default(Web)) f_cpbw_KM = f_cpbw_KM - 2._wp/(fR*Web)
         if (.not. f_is_default(Re_inv)) f_cpbw_KM = f_cpbw_KM - 4._wp*Re_inv*fV/fR
-        !if (sint_bub_elastic) f_cpbw_KM = f_cpbw_KM - (fluid_pp(1)%G/2)*(5._wp - 4._wp*(fR0/fR) - (fR0/fR)**4._wp)
+        if (.not. f_is_default(Cau_inv)) f_cpbw_KM = f_cpbw_KM - (Cau_inv/2)*(5._wp - 4._wp*(fR0/fR) - (fR0/fR)**4._wp)
 
     end function f_cpbw_KM
 
@@ -304,10 +304,7 @@ contains
 
         if (.not. f_is_default(Web)) cdot_star = cdot_star + (2._wp/Web)*fV/(fR**2._wp)
         if (.not. f_is_default(Re_inv)) cdot_star = cdot_star + 4._wp*Re_inv*((fV/fR)**2._wp)
-        if (sint_bub_elastic) then
-            cdot_star = cdot_star - fluid_pp(1)%G !*2._wp*(fV/fR*(fR0/fR + (fR0/fR)**4._wp))
-            !  WRITE(cmd, '(A, F8.2)') 'Calculated result: ', cdot_star
-        end if
+        if (.not. f_is_default(Cau_inv)) cdot_star = cdot_star - Cau_inv*2._wp*(fV/fR*(fR0/fR + (fR0/fR)**4._wp))
 
         tmp1 = fV/fC
         tmp2 = 1.5_wp*(fV**2._wp)*(tmp1/3._wp - 1._wp) + &

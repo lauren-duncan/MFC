@@ -219,7 +219,7 @@ module m_global_parameters
     !> @{
     integer :: nb
     real(wp) :: R0ref
-    real(wp) :: Ca, Web, Re_inv
+    real(wp) :: Ca, Web, Re_inv, Cau_inv
     real(wp), dimension(:), allocatable :: weight, R0
     logical :: bubbles_euler
     logical :: qbmm      !< Quadrature moment method
@@ -491,6 +491,7 @@ contains
 
         Ca = dflt_real
         Re_inv = dflt_real
+        Cau_inv = dflt_real
         Web = dflt_real
         poly_sigma = dflt_real
         surface_tension = .false.

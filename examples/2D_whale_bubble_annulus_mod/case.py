@@ -24,7 +24,7 @@ Ca = (p0 - pv) / (0.5 * rho0 * u0**2)
 Ly = 6.0 / x0
 Lx = 6.0 / x0
 
-Ny = 399
+Ny = 499
 Nx = Ny
 dx = Lx / float(Nx)
 dy = Ly / float(Ny)
@@ -44,9 +44,9 @@ Nt = t_save * Nfiles
 
 ang = 1.0
 
-myr0 = 1e0
+myr0 = 1e-3
 vf0 = 1.0e-12
-alf = 1.0e-4
+alf = 1.0e-2
 # Configuring case dictionary
 print(
     json.dumps(
@@ -158,7 +158,7 @@ print(
             "acoustic(1)%npulse": 10,
             "acoustic(1)%dir": 0.78539816339,
             "acoustic(1)%mag": 1000/p0,
-            "acoustic(1)%length": 1e3,#9.0e09,
+            "acoustic(1)%length": 0.1,#9.0e09,
             # "acoustic(1)%wavelength": 0.2,
             "acoustic(1)%frequency": 1e3,
             "rdma_mpi": "F",
