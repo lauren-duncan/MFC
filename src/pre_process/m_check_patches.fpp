@@ -82,6 +82,8 @@ contains
                     call s_check_spherical_harmonic_patch_geometry(i)
                 elseif (patch_icpp(i)%geometry == 20) then
                     call s_check_2D_TaylorGreen_vortex_patch_geometry(i)
+		elseif (patch_icpp(i)%geometry == 18) then
+
                 elseif (patch_icpp(i)%geometry == 21) then
                     call s_check_model_geometry(i)
                 else

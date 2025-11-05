@@ -46,7 +46,7 @@ ang = 1.0
 
 myr0 = 1e0
 vf0 = 1.0e-12
-alf = 1.0e-3
+alf = 1.0e-4
 # Configuring case dictionary
 print(
     json.dumps(
@@ -109,7 +109,7 @@ print(
             "patch_icpp(2)%x_centroid": 0.0,
             "patch_icpp(2)%y_centroid": 0.0,
             "patch_icpp(2)%radius": 1.,
-            "patch_icpp(2)%thickness": 0.5,
+            "patch_icpp(2)%epsilon": 0.5,
             "patch_icpp(2)%alpha_rho(1)": (1.0 - alf),
             "patch_icpp(2)%alpha(1)": alf,
             "patch_icpp(2)%vel(1)": 0.0,
@@ -141,14 +141,14 @@ print(
             "bubbles_euler": "T",
             "bubble_model": 3,
             "polytropic": "T",
-            "polydisperse": "T",
+            "polydisperse": "F",
             "thermal": 3,
             "R0ref": myr0,
-            "nb": 11,
-            "poly_sigma": 0.3,
+            "nb": 1,
+            #"poly_sigma": 0.3,
             "Ca": Ca,
-            "Re_inv": 0.1,
-            "Web": 300,
+            #"Re_inv": 0.1,
+            #"Web": 300,
             "acoustic_source": "T",
             "num_source": 1,
             "acoustic(1)%support": 2,
@@ -157,8 +157,8 @@ print(
             "acoustic(1)%pulse": 1,
             "acoustic(1)%npulse": 10,
             "acoustic(1)%dir": 0.78539816339,
-            "acoustic(1)%mag": 0.1,
-            "acoustic(1)%length": 9.0e09,
+            "acoustic(1)%mag": 1000/p0,
+            "acoustic(1)%length": 1e3,#9.0e09,
             # "acoustic(1)%wavelength": 0.2,
             "acoustic(1)%frequency": 1e3,
             "rdma_mpi": "F",
