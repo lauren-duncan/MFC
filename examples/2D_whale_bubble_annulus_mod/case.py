@@ -157,7 +157,7 @@ print(
             "acoustic(1)%pulse": 1,
             "acoustic(1)%npulse": 10,
             "acoustic(1)%dir": 0.78539816339,
-            "acoustic(1)%mag": 1000/p0,
+            "acoustic(1)%mag": 1e5/p0,
             "acoustic(1)%length": 0.1,#9.0e09,
             # "acoustic(1)%wavelength": 0.2,
             "acoustic(1)%frequency": 1e3,
