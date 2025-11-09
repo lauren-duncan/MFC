@@ -38,7 +38,7 @@ sigBubble = 0.069  # Surface tension of the bubble - N/m
 mu_g = 1.48e-5
 Re_inv_host = 1.0 / (mu_host / (rho0 * c0 * x0))
 Re_inv_gas = 1.0 / (mu_g / (rho0 * c0 * x0))
-
+Cau_inv = 5e4/p0
 # Acoustic source properties
 patm = 101325.0  # Atmospheric pressure - Pa
 pamp = 1.0e5  # Amplitude of the acoustic source - Pa
@@ -47,17 +47,21 @@ wlen = c_host / freq  # Wavelength - m
 
 # Domain and time set up
 
-xb = -12.0e-3  # Domain boundaries - m (x direction)
-xe = 12.0e-3
-yb = -2.5e-3  # Domain boundaries - m (y direction)
-ye = 2.5e-3
-z_virtual = 5.0e-3  # Virtual depth (z direction)
+L = 5e-3
 
-Nx = 249  # number of elements into x direction
-Ny = 49  # number of elements into y direction
+xb = -L  # Domain boundaries - m (x direction)
+xe = L
+yb = -L  # Domain boundaries - m (y direction)
+ye = L
+z_virtual = L  # Virtual depth (z direction)
+
+Nx = 399  # number of elements into x direction
+Ny = 399  # number of elements into y direction
 
 dt = 7.5e-9  # constant time-step - sec
 
+tstop = int(50)
+tframes = int(5)
 # Configuring case dictionary
 print(
     json.dumps(
@@ -76,10 +80,12 @@ print(
             "p": 0,
             "dt": dt * (c0 / x0),
             "t_step_start": 0,
-            "t_step_stop": 50,
-            "t_step_save": 10,
+            "t_step_stop": tstop,
+            "t_step_save": int(tstop/tframes),
             # Simulation Algorithm Parameters
             "model_eqns": 2,
+            "hypoelasticity": "T",
+            "fd_order": 4,
             "time_stepper": 3,
             "num_fluids": 2,
             "num_patches": 1,
@@ -93,8 +99,8 @@ print(
             "avg_state": 2,
             "bc_x%beg": -6,
             "bc_x%end": -6,
-            "bc_y%beg": -1,
-            "bc_y%end": -1,
+            "bc_y%beg": -6,
+            "bc_y%end": -6,
             # Acoustic source
             "acoustic_source": "F",
             "num_source": 1,
@@ -130,8 +136,8 @@ print(
             # Lagrangian Bubbles
             "bubbles_lagrange": "T",
             "bubble_model": 2,  # Keller-Miksis model
-            "Cau_inv": 0.,
-            "lag_params%nBubs_glb": 200,  # Number of bubbles
+            "Cau_inv": Cau_inv,
+            "lag_params%nBubs_glb": 1,  # Number of bubbles
             "lag_params%solver_approach": 2,
             "lag_params%cluster_type": 2,
             "lag_params%pressure_corrector": "T",
@@ -161,6 +167,7 @@ print(
             "fluid_pp(1)%M_v": MW_v,
             "fluid_pp(1)%k_v": k_v,
             "fluid_pp(1)%cp_v": cp_v,
+            "fluid_pp(1)%G": Cau_inv,
             # Bubble gas state
             "fluid_pp(2)%gamma": 1.0 / (gamma_g - 1.0),
             "fluid_pp(2)%pi_inf": 0.0e00,
@@ -169,6 +176,7 @@ print(
             "fluid_pp(2)%M_v": MW_g,
             "fluid_pp(2)%k_v": k_g,
             "fluid_pp(2)%cp_v": cp_g,
+            "fluid_pp(2)%G":0,
         }
     )
 )
