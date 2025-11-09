@@ -197,7 +197,7 @@ contains
 
         type(scalar_field), dimension(sys_size), intent(inout) :: q_cons_vf
 
-        real(wp), dimension(8) :: inputBubble
+        real(wp), dimension(9) :: inputBubble
         real(wp) :: qtime
         integer :: id, bub_id, save_count
         integer :: i, ios
@@ -224,7 +224,7 @@ contains
             if (file_exist) then
                 open (94, file='input/lag_bubbles.dat', form='formatted', iostat=ios)
                 do while (ios == 0)
-                    read (94, *, iostat=ios) (inputBubble(i), i=1, 8)
+                    read (94, *, iostat=ios) (inputBubble(i), i=1, 9)
                     if (ios /= 0) cycle
                     indomain = particle_in_domain_physical(inputBubble(1:3))
                     id = id + 1
@@ -288,7 +288,7 @@ contains
     impure subroutine s_add_bubbles(inputBubble, q_cons_vf, bub_id)
 
         type(scalar_field), dimension(sys_size), intent(in) :: q_cons_vf
-        real(wp), dimension(8), intent(in) :: inputBubble
+        real(wp), dimension(9), intent(in) :: inputBubble
         integer, intent(in) :: bub_id
         integer :: i
 
@@ -303,7 +303,7 @@ contains
         if (lag_params%massTransfer_model) massflag = 1._wp
         if (lag_params%heatTransfer_model) heatflag = 1._wp
 
-        bub_R0(bub_id) = inputBubble(7)
+        bub_R0(bub_id) = inputBubble(9)
         Rmax_stats(bub_id) = min(dflt_real, -dflt_real)
         Rmin_stats(bub_id) = max(dflt_real, -dflt_real)
         bub_dphidt(bub_id) = 0._wp
