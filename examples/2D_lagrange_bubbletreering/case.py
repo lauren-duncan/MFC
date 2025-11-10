@@ -60,8 +60,8 @@ Ny = 399  # number of elements into y direction
 
 dt = 7.5e-9  # constant time-step - sec
 
-tstop = int(5)
-tframes = int(5)
+tstop = int(500)
+tframes = int(50)
 # Configuring case dictionary
 print(
     json.dumps(
