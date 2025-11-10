@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3
 import math
 import json
 
@@ -81,7 +81,7 @@ print(
             "dt": dt * (c0 / x0),
             "t_step_start": 0,
             "t_step_stop": tstop,
-            "t_step_save": int(tstop/tframes),
+            "t_step_save": int(tstop / tframes),
             # Simulation Algorithm Parameters
             "model_eqns": 2,
             "time_stepper": 3,
@@ -134,7 +134,7 @@ print(
             # Lagrangian Bubbles
             "bubbles_lagrange": "T",
             "bubble_model": 2,  # Keller-Miksis model
-            "Cau_inv": 5E3/p0,
+            "Cau_inv": 5e3 / p0,
             "lag_params%nBubs_glb": 200,  # Number of bubbles
             "lag_params%solver_approach": 2,
             "lag_params%cluster_type": 2,

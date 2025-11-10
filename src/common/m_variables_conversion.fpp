@@ -1072,9 +1072,9 @@ contains
                         call s_compute_pressure(qK_cons_vf(E_idx)%sf(j, k, l), &
                                                 qK_cons_vf(alf_idx)%sf(j, k, l), &
                                                 dyn_pres_K, pi_inf_K, gamma_K, rho_K, &
-                                                qv_K, rhoYks, pres, T, & 
-                                                qK_cons_vf(stress_idx%beg)%sf(j,k,l), &
-                                                qK_cons_vf(mom_idx%beg)%sf(j,k,l), & 
+                                                qv_K, rhoYks, pres, T, &
+                                                qK_cons_vf(stress_idx%beg)%sf(j, k, l), &
+                                                qK_cons_vf(mom_idx%beg)%sf(j, k, l), &
                                                 G_K, pres_mag=pres_mag)
 
                         qK_prim_vf(E_idx)%sf(j, k, l) = pres

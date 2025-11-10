@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3
 import math
 import json
 
@@ -38,7 +38,7 @@ sigBubble = 0.069  # Surface tension of the bubble - N/m
 mu_g = 1.48e-5
 Re_inv_host = 1.0 / (mu_host / (rho0 * c0 * x0))
 Re_inv_gas = 1.0 / (mu_g / (rho0 * c0 * x0))
-Cau_inv = 5e3/p0
+Cau_inv = 5e3 / p0
 # Acoustic source properties
 patm = 101325.0  # Atmospheric pressure - Pa
 pamp = 1.0e5  # Amplitude of the acoustic source - Pa
@@ -81,7 +81,7 @@ print(
             "dt": dt * (c0 / x0),
             "t_step_start": 0,
             "t_step_stop": tstop,
-            "t_step_save": int(tstop/tframes),
+            "t_step_save": int(tstop / tframes),
             # Simulation Algorithm Parameters
             "model_eqns": 2,
             "hypoelasticity": "T",
@@ -176,7 +176,7 @@ print(
             "fluid_pp(2)%M_v": MW_g,
             "fluid_pp(2)%k_v": k_g,
             "fluid_pp(2)%cp_v": cp_g,
-            "fluid_pp(2)%G":0,
+            "fluid_pp(2)%G": 0,
         }
     )
 )
