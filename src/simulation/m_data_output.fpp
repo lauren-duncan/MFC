@@ -1337,7 +1337,7 @@ contains
                             end if
 
                             call s_compute_pressure( &
-                                q_cons_vf(1)%sf(j - 2, k - 2, l), &
+                                q_cons_vf(E_idx)%sf(j - 2, k - 2, l), &
                                 q_cons_vf(alf_idx)%sf(j - 2, k - 2, l), &
                                 dyn_p, pi_inf, gamma, rho, qv, &
                                 rhoYks, &

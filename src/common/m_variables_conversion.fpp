@@ -1059,10 +1059,15 @@ contains
                             pres_mag = 0._wp
                         end if
 
-                        !call s_compute_pressure(qK_cons_vf(E_idx)%sf(j, k, l), &
-                        !                        qK_cons_vf(alf_idx)%sf(j, k, l), &
-                        !                        dyn_pres_K, pi_inf_K, gamma_K, rho_K, &
-                        !                        qv_K, rhoYks, pres, T, pres_mag=pres_mag)
+                        if (hypoelasticity) then
+                            $:GPU_LOOP(parallelism='[seq]')
+                            do i = strxb, strxe
+                                ! subtracting elastic contribution for pressure calculation
+                                if (G_K > verysmall) then
+                                    if (cont_damage) G_K = G_K*max((1._wp - qK_cons_vf(damage_idx)%sf(j, k, l)), 0._wp)
+                                end if
+                            end do
+                        end if
 
                         call s_compute_pressure(qK_cons_vf(E_idx)%sf(j, k, l), &
                                                 qK_cons_vf(alf_idx)%sf(j, k, l), &
@@ -1128,23 +1133,6 @@ contains
                                 qK_prim_vf(i)%sf(j, k, l) = qK_cons_vf(i)%sf(j, k, l)/rho_K
                             end do
                         end if
-
-                        !if (hypoelasticity) then
-                        !    $:GPU_LOOP(parallelism='[seq]')
-                        !    do i = strxb, strxe
-                        !        ! subtracting elastic contribution for pressure calculation
-                        !        if (G_K > verysmall) then
-                        !            if (cont_damage) G_K = G_K*max((1._wp - qK_cons_vf(damage_idx)%sf(j, k, l)), 0._wp)
-                        !            qK_prim_vf(E_idx)%sf(j, k, l) = qK_prim_vf(E_idx)%sf(j, k, l) - &
-                        !                                            ((qK_prim_vf(i)%sf(j, k, l)**2._wp)/(4._wp*G_K))/gamma_K
-                        !            ! Double for shear stresses
-                        !            if (any(i == shear_indices)) then
-                        !                qK_prim_vf(E_idx)%sf(j, k, l) = qK_prim_vf(E_idx)%sf(j, k, l) - &
-                        !                                                ((qK_prim_vf(i)%sf(j, k, l)**2._wp)/(4._wp*G_K))/gamma_K
-                        !            end if
-                        !        end if
-                        !    end do
-                        !end if
 
                         if (hyperelasticity) then
                             $:GPU_LOOP(parallelism='[seq]')

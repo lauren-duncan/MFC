@@ -38,7 +38,7 @@ sigBubble = 0.069  # Surface tension of the bubble - N/m
 mu_g = 1.48e-5
 Re_inv_host = 1.0 / (mu_host / (rho0 * c0 * x0))
 Re_inv_gas = 1.0 / (mu_g / (rho0 * c0 * x0))
-Cau_inv = 5e4/p0
+Cau_inv = 5e3/p0
 # Acoustic source properties
 patm = 101325.0  # Atmospheric pressure - Pa
 pamp = 1.0e5  # Amplitude of the acoustic source - Pa
@@ -137,7 +137,7 @@ print(
             "bubbles_lagrange": "T",
             "bubble_model": 2,  # Keller-Miksis model
             "Cau_inv": Cau_inv,
-            "lag_params%nBubs_glb": 1,  # Number of bubbles
+            "lag_params%nBubs_glb": 200,  # Number of bubbles
             "lag_params%solver_approach": 2,
             "lag_params%cluster_type": 2,
             "lag_params%pressure_corrector": "T",
