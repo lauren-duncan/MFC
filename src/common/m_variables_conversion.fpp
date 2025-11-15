@@ -1059,6 +1059,13 @@ contains
                             pres_mag = 0._wp
                         end if
 
+                        if (elasticity) then
+                            $:GPU_LOOP(parallelism='[seq]')
+                            do i = strxb, strxe
+                                qK_prim_vf(i)%sf(j, k, l) = qK_cons_vf(i)%sf(j, k, l)/rho_K
+                            end do
+                        end if
+
                         if (hypoelasticity) then
                             $:GPU_LOOP(parallelism='[seq]')
                             do i = strxb, strxe
@@ -1128,13 +1135,6 @@ contains
                             $:GPU_LOOP(parallelism='[seq]')
                             do i = B_idx%beg, B_idx%end
                                 qK_prim_vf(i)%sf(j, k, l) = qK_cons_vf(i)%sf(j, k, l)
-                            end do
-                        end if
-
-                        if (elasticity) then
-                            $:GPU_LOOP(parallelism='[seq]')
-                            do i = strxb, strxe
-                                qK_prim_vf(i)%sf(j, k, l) = qK_cons_vf(i)%sf(j, k, l)/rho_K
                             end do
                         end if
 
