@@ -228,8 +228,7 @@ contains
                             rhs_vf(strxb)%sf(k, l, q) = &
                                 rhs_vf(strxb)%sf(k, l, q) + rho_K_field(k, l, q)* &
                                 ((4._wp*G_K_field(k, l, q)/3._wp) + &
-                                 q_prim_vf(strxb)%sf(k, l, q))* &
-                                du_dx_hypo(k, l, q)
+                                 q_prim_vf(strxb)%sf(k, l, q))*du_dx_hypo(k, l, q)
                         end do
                     end do
                 end do
@@ -241,27 +240,19 @@ contains
                     do l = 0, n
                         do k = 0, m
                             rhs_vf(strxb)%sf(k, l, q) = rhs_vf(strxb)%sf(k, l, q) + rho_K_field(k, l, q)* &
-                                                        (q_prim_vf(strxb + 1)%sf(k, l, q)*du_dy_hypo(k, l, q) + &
-                                                         q_prim_vf(strxb + 1)%sf(k, l, q)*du_dy_hypo(k, l, q) - &
+                                                        (2._wp*q_prim_vf(strxb + 1)%sf(k, l, q)*du_dy_hypo(k, l, q) - &
                                                          q_prim_vf(strxb)%sf(k, l, q)*dv_dy_hypo(k, l, q) - &
                                                          2._wp*G_K_field(k, l, q)*(1._wp/3._wp)*dv_dy_hypo(k, l, q))
 
                             rhs_vf(strxb + 1)%sf(k, l, q) = rhs_vf(strxb + 1)%sf(k, l, q) + rho_K_field(k, l, q)* &
-                                                            (q_prim_vf(strxb + 1)%sf(k, l, q)*du_dx_hypo(k, l, q) + &
-                                                             q_prim_vf(strxb)%sf(k, l, q)*dv_dx_hypo(k, l, q) - &
-                                                             q_prim_vf(strxb + 1)%sf(k, l, q)*du_dx_hypo(k, l, q) + &
+                                                            (q_prim_vf(strxb)%sf(k, l, q)*dv_dx_hypo(k, l, q) + &
                                                              q_prim_vf(strxb + 2)%sf(k, l, q)*du_dy_hypo(k, l, q) + &
-                                                             q_prim_vf(strxb + 1)%sf(k, l, q)*dv_dy_hypo(k, l, q) - &
-                                                             q_prim_vf(strxb + 1)%sf(k, l, q)*dv_dy_hypo(k, l, q) + &
-                                                             2._wp*G_K_field(k, l, q)*(1._wp/2._wp)*(du_dy_hypo(k, l, q) + &
-                                                                                                     dv_dx_hypo(k, l, q)))
+                                                             G_K_field(k, l, q)*(du_dy_hypo(k, l, q) + &
+                                                                                 dv_dx_hypo(k, l, q)))
 
                             rhs_vf(strxb + 2)%sf(k, l, q) = rhs_vf(strxb + 2)%sf(k, l, q) + rho_K_field(k, l, q)* &
-                                                            (q_prim_vf(strxb + 1)%sf(k, l, q)*dv_dx_hypo(k, l, q) + &
-                                                             q_prim_vf(strxb + 1)%sf(k, l, q)*dv_dx_hypo(k, l, q) - &
+                                                            (2._wp*q_prim_vf(strxb + 1)%sf(k, l, q)*dv_dx_hypo(k, l, q) - &
                                                              q_prim_vf(strxb + 2)%sf(k, l, q)*du_dx_hypo(k, l, q) + &
-                                                             q_prim_vf(strxb + 2)%sf(k, l, q)*dv_dy_hypo(k, l, q) + &
-                                                             q_prim_vf(strxb + 2)%sf(k, l, q)*dv_dy_hypo(k, l, q) - &
                                                              q_prim_vf(strxb + 2)%sf(k, l, q)*dv_dy_hypo(k, l, q) + &
                                                              2._wp*G_K_field(k, l, q)*(dv_dy_hypo(k, l, q) - (1._wp/3._wp)* &
                                                                                        (du_dx_hypo(k, l, q) + &

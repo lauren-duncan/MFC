@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3
 import math
 import json
 
@@ -8,7 +8,7 @@ import json
 # while the bubbles are tracked using a Lagrangian framework.
 
 # Reference values for nondimensionalization
-x0 = 1.0e-03  # length - m
+x0 = 1.0  # length - m
 rho0 = 1.0e03  # density - kg/m3
 c0 = 1475.0  # speed of sound - m/s
 p0 = rho0 * c0 * c0  # pressure - Pa
@@ -21,6 +21,12 @@ mu_host = 1e-3  # Dynamic viscosity - Pa.s
 c_host = 1475.0  # speed of sound - m/s
 rho_host = 1000  # density kg/m3
 T_host = 298  # temperature K
+
+# air properties
+rho_outer = 500  # kg/m^3
+rho_mid = 450  # kg/m^3
+rho_inner = 400  # kg/m^3
+rho_gas = 1.225  # kg/m^3
 
 # Lagrangian bubbles' properties
 R_uni = 8314  # Universal gas constant - J/kmol/K
@@ -47,7 +53,7 @@ wlen = c_host / freq  # Wavelength - m
 
 # Domain and time set up
 
-L = 5e-3
+L = 1.75
 
 xb = -L  # Domain boundaries - m (x direction)
 xe = L
@@ -60,8 +66,8 @@ Ny = 399  # number of elements into y direction
 
 dt = 7.5e-9  # constant time-step - sec
 
-tstop = int(500)
-tframes = int(50)
+tstop = int(10)
+tframes = int(10)
 # Configuring case dictionary
 print(
     json.dumps(
@@ -88,7 +94,7 @@ print(
             "fd_order": 4,
             "time_stepper": 3,
             "num_fluids": 2,
-            "num_patches": 1,
+            "num_patches": 4,
             "viscous": "T",
             "mpp_lim": "F",
             "weno_order": 5,
@@ -120,24 +126,63 @@ print(
             "prim_vars_wrt": "T",
             "parallel_io": "T",
             "lag_db_wrt": "T",
-            # Patch 1: Water (left)
+            # Patch 1: Outside air
             "patch_icpp(1)%geometry": 3,
             "patch_icpp(1)%x_centroid": 0.0,
             "patch_icpp(1)%y_centroid": 0.0,
-            "patch_icpp(1)%length_x": 2 * (xe - xb) / x0,
-            "patch_icpp(1)%length_y": 2 * (ye - yb) / x0,
+            "patch_icpp(1)%length_x": (xe - xb) / x0,
+            "patch_icpp(1)%length_y": (ye - yb) / x0,
             "patch_icpp(1)%vel(1)": 0.0,
             "patch_icpp(1)%vel(2)": 0.0,
             "patch_icpp(1)%pres": patm / p0,
-            "patch_icpp(1)%alpha_rho(1)": rho_host / rho0,
-            "patch_icpp(1)%alpha_rho(2)": 0.0,
-            "patch_icpp(1)%alpha(1)": 1.0,
-            "patch_icpp(1)%alpha(2)": 0.0,
+            "patch_icpp(1)%alpha_rho(1)": 0.0,
+            "patch_icpp(1)%alpha_rho(2)": rho_gas / rho0,
+            "patch_icpp(1)%alpha(1)": 0.0,
+            "patch_icpp(1)%alpha(2)": 1.0,
+            # Patch 2: Outer tree
+            "patch_icpp(2)%geometry": 2,
+            "patch_icpp(2)%alter_patch(1)": "T",
+            "patch_icpp(2)%x_centroid": 0.0,
+            "patch_icpp(2)%y_centroid": 0.0,
+            "patch_icpp(2)%radius": 1.4,
+            "patch_icpp(2)%vel(1)": 0.0,
+            "patch_icpp(2)%vel(2)": 0.0,
+            "patch_icpp(2)%pres": patm / p0,
+            "patch_icpp(2)%alpha_rho(1)": rho_outer / rho0,
+            "patch_icpp(2)%alpha_rho(2)": 0.0,
+            "patch_icpp(2)%alpha(1)": 1.0,
+            "patch_icpp(2)%alpha(2)": 0.0,
+            # Patch 3: xylem
+            "patch_icpp(3)%geometry": 2,
+            "patch_icpp(3)%alter_patch(2)": "T",
+            "patch_icpp(3)%x_centroid": 0.0,
+            "patch_icpp(3)%y_centroid": 0.0,
+            "patch_icpp(3)%radius": 1.2,
+            "patch_icpp(3)%vel(1)": 0.0,
+            "patch_icpp(3)%vel(2)": 0.0,
+            "patch_icpp(3)%pres": patm / p0,
+            "patch_icpp(3)%alpha_rho(1)": rho_mid / rho0,
+            "patch_icpp(3)%alpha_rho(2)": 0.0,
+            "patch_icpp(3)%alpha(1)": 1.0,
+            "patch_icpp(3)%alpha(2)": 0.0,
+            # Patch 4: inner tree
+            "patch_icpp(4)%geometry": 2,
+            "patch_icpp(4)%alter_patch(3)": "T",
+            "patch_icpp(4)%x_centroid": 0.0,
+            "patch_icpp(4)%y_centroid": 0.0,
+            "patch_icpp(4)%radius": 0.8,
+            "patch_icpp(4)%vel(1)": 0.0,
+            "patch_icpp(4)%vel(2)": 0.0,
+            "patch_icpp(4)%pres": patm / p0,
+            "patch_icpp(4)%alpha_rho(1)": rho_inner / rho0,
+            "patch_icpp(4)%alpha_rho(2)": 0.0,
+            "patch_icpp(4)%alpha(1)": 1.0,
+            "patch_icpp(4)%alpha(2)": 0.0,
             # Lagrangian Bubbles
             "bubbles_lagrange": "T",
             "bubble_model": 2,  # Keller-Miksis model
             "Cau_inv": Cau_inv,
-            "lag_params%nBubs_glb": 200,  # Number of bubbles
+            "lag_params%nBubs_glb": 1000,  # Number of bubbles
             "lag_params%solver_approach": 2,
             "lag_params%cluster_type": 2,
             "lag_params%pressure_corrector": "T",

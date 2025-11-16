@@ -154,23 +154,11 @@ contains
 
             if (hypoelasticity .and. present(G)) then
                 ! calculate elastic contribution to Energy
-                E_e = 0._wp
-                do s = stress_idx%beg, stress_idx%end
-                    if (G > 0) then
-                        E_e = E_e + ((stress/rho)**2._wp)/(4._wp*G)
-                        ! Double for shear stresses
-                        if (any(s == shear_indices)) then
-                            E_e = E_e + ((stress/rho)**2._wp)/(4._wp*G)
-                        end if
-                    end if
-                end do
-
                 pres = ( &
                        energy - &
-                       0.5_wp*(mom**2._wp)/rho - &
-                       pi_inf - qv - E_e &
+                       dyn_p - &
+                       pi_inf - qv - stress &
                        )/gamma
-
             end if
 
         #:else
@@ -845,7 +833,7 @@ contains
         integer :: i, j, k, l !< Generic loop iterators
 
         real(wp) :: T
-        real(wp) :: pres_mag
+        real(wp) :: pres_mag, stress
 
         real(wp) :: Ga ! Lorentz factor (gamma in relativity)
         real(wp) :: B2 ! Magnetic field magnitude squared
@@ -1068,18 +1056,25 @@ contains
 
                         if (hypoelasticity) then
                             $:GPU_LOOP(parallelism='[seq]')
-                            do i = strxb, strxe
-                                ! subtracting elastic contribution for pressure calculation
-                                if (G_K > verysmall) then
-                                    if (cont_damage) G_K = G_K*max((1._wp - qK_cons_vf(damage_idx)%sf(j, k, l)), 0._wp)
-                                end if
-                            end do
+                            stress = 0._wp
+                            ! subtracting elastic contribution for pressure calculation
+                            if (G_K > verysmall) then
+                                if (cont_damage) G_K = G_K*max((1._wp - qK_cons_vf(damage_idx)%sf(j, k, l)), 0._wp)
+
+                                do i = strxb, strxe
+                                    stress = stress + ((qK_prim_vf(i)%sf(j, k, l)**2._wp)/(4._wp*G_K))/gamma_K
+                                    ! Double for shear stresses
+                                    if (any(i == shear_indices)) then
+                                        stress = stress + ((qK_prim_vf(i)%sf(j, k, l)**2._wp)/(4._wp*G_K))/gamma_K
+                                    end if
+                                end do
+                            end if
                             call s_compute_pressure(qK_cons_vf(E_idx)%sf(j, k, l), &
                                                     qK_cons_vf(alf_idx)%sf(j, k, l), &
                                                     dyn_pres_K, pi_inf_K, gamma_K, rho_K, &
                                                     qv_K, rhoYks, pres, T, &
                                                     qK_cons_vf(strxb)%sf(j, k, l), &
-                                                    qK_cons_vf(momxb)%sf(j, k, l), &
+                                                    stress, &
                                                     G_K, pres_mag=pres_mag)
                         else
                             call s_compute_pressure(qK_cons_vf(E_idx)%sf(j, k, l), &
@@ -1401,11 +1396,10 @@ contains
                     end if
 
                     if (hypoelasticity) then
+                        if (cont_damage .and. G > verysmall) G = G*max((1._wp - q_prim_vf(damage_idx)%sf(j, k, l)), 0._wp)
                         do i = strxb, strxe
                             ! adding elastic contribution
                             if (G > verysmall) then
-                                if (cont_damage) G = G*max((1._wp - q_prim_vf(damage_idx)%sf(j, k, l)), 0._wp)
-
                                 q_cons_vf(E_idx)%sf(j, k, l) = q_cons_vf(E_idx)%sf(j, k, l) + &
                                                                (q_prim_vf(i)%sf(j, k, l)**2._wp)/(4._wp*G)
                                 ! Double for shear stresses

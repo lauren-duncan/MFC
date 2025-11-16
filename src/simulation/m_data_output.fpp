@@ -1129,7 +1129,7 @@ contains
         real(wp), dimension(6) :: tau_e
         real(wp) :: G_local
         real(wp) :: dyn_p, T
-        real(wp) :: damage_state
+        real(wp) :: damage_state, stress
 
         integer :: i, j, k, l, s, d !< Generic loop iterator
 
@@ -1184,7 +1184,7 @@ contains
                 tau_e(s) = 0._wp
             end do
             damage_state = 0._wp
-
+            stress = 0._wp
             ! Find probe location in terms of indices on a
             ! specific processor
             if (n == 0) then ! 1D simulation
@@ -1220,20 +1220,29 @@ contains
                     dyn_p = 0.5_wp*rho*dot_product(vel, vel)
 
                     if (elasticity) then
-                        if (cont_damage) then
-                            damage_state = q_cons_vf(damage_idx)%sf(j - 2, k, l)
-                            G_local = G_local*max((1._wp - damage_state), 0._wp)
+                        if (G_local > verysmall) then
+                            if (cont_damage) then
+                                damage_state = q_cons_vf(damage_idx)%sf(j - 2, k, l)
+                                G_local = G_local*max((1._wp - damage_state), 0._wp)
+                            end if
+                            do s = strxb, strxe
+                                ! subtracting elastic contribution for pressure calculation
+                                stress = stress + (((q_cons_vf(s)%sf(j - 2, k, l)/rho)**2._wp)/(4._wp*G_local))/gamma
+                                ! Double for shear stresses
+                                if (any(s == shear_indices)) then
+                                    stress = stress + (((q_cons_vf(s)%sf(j - 2, k, l)/rho)**2._wp)/(4._wp*G_local))/gamma
+                                end if
+                            end do
                         end if
-
                         call s_compute_pressure( &
-                            q_cons_vf(1)%sf(j - 2, k, l), &
+                            q_cons_vf(E_idx)%sf(j - 2, k, l), &
                             q_cons_vf(alf_idx)%sf(j - 2, k, l), &
                             dyn_p, pi_inf, gamma, rho, qv, rhoYks(:), pres, T, &
-                            q_cons_vf(stress_idx%beg)%sf(j - 2, k, l), &
+                            stress, &
                             q_cons_vf(mom_idx%beg)%sf(j - 2, k, l), G_local)
                     else
                         call s_compute_pressure( &
-                            q_cons_vf(1)%sf(j - 2, k, l), &
+                            q_cons_vf(E_idx)%sf(j - 2, k, l), &
                             q_cons_vf(alf_idx)%sf(j - 2, k, l), &
                             dyn_p, pi_inf, gamma, rho, qv, rhoYks(:), pres, T)
                     end if
@@ -1331,11 +1340,20 @@ contains
                         dyn_p = 0.5_wp*rho*dot_product(vel, vel)
 
                         if (elasticity) then
-                            if (cont_damage) then
-                                damage_state = q_cons_vf(damage_idx)%sf(j - 2, k - 2, l)
-                                G_local = G_local*max((1._wp - damage_state), 0._wp)
+                            if (G_local > verysmall) then
+                                if (cont_damage) then
+                                    damage_state = q_cons_vf(damage_idx)%sf(j - 2, k - 2, l)
+                                    G_local = G_local*max((1._wp - damage_state), 0._wp)
+                                end if
+                                do s = strxb, strxe
+                                    ! subtracting elastic contribution for pressure calculation
+                                    stress = stress + (((q_cons_vf(s)%sf(j - 2, k - 2, l)/rho)**2._wp)/(4._wp*G_local))/gamma
+                                    ! Double for shear stresses
+                                    if (any(s == shear_indices)) then
+                                        stress = stress + (((q_cons_vf(s)%sf(j - 2, k - 2, l)/rho)**2._wp)/(4._wp*G_local))/gamma
+                                    end if
+                                end do
                             end if
-
                             call s_compute_pressure( &
                                 q_cons_vf(E_idx)%sf(j - 2, k - 2, l), &
                                 q_cons_vf(alf_idx)%sf(j - 2, k - 2, l), &
@@ -1343,7 +1361,7 @@ contains
                                 rhoYks, &
                                 pres, &
                                 T, &
-                                q_cons_vf(stress_idx%beg)%sf(j - 2, k - 2, l), &
+                                stress, &
                                 q_cons_vf(mom_idx%beg)%sf(j - 2, k - 2, l), G_local)
                         else
                             call s_compute_pressure(q_cons_vf(E_idx)%sf(j - 2, k - 2, l), &
@@ -1427,17 +1445,26 @@ contains
                             end if
 
                             if (elasticity) then
-                                if (cont_damage) then
-                                    damage_state = q_cons_vf(damage_idx)%sf(j - 2, k - 2, l - 2)
-                                    G_local = G_local*max((1._wp - damage_state), 0._wp)
+                                if (G_local > verysmall) then
+                                    if (cont_damage) then
+                                        damage_state = q_cons_vf(damage_idx)%sf(j - 2, k - 2, l - 2)
+                                        G_local = G_local*max((1._wp - damage_state), 0._wp)
+                                    end if
+                                    do s = strxb, strxe
+                                        ! subtracting elastic contribution for pressure calculation
+                                        stress = stress + (((q_cons_vf(s)%sf(j - 2, k - 2, l - 2)/rho)**2._wp)/(4._wp*G_local))/gamma
+                                        ! Double for shear stresses
+                                        if (any(s == shear_indices)) then
+                                            stress = stress + (((q_cons_vf(s)%sf(j - 2, k - 2, l - 2)/rho)**2._wp)/(4._wp*G_local))/gamma
+                                        end if
+                                    end do
                                 end if
-
                                 call s_compute_pressure( &
-                                    q_cons_vf(1)%sf(j - 2, k - 2, l - 2), &
+                                    q_cons_vf(E_idx)%sf(j - 2, k - 2, l - 2), &
                                     q_cons_vf(alf_idx)%sf(j - 2, k - 2, l - 2), &
                                     dyn_p, pi_inf, gamma, rho, qv, &
                                     rhoYks, pres, T, &
-                                    q_cons_vf(stress_idx%beg)%sf(j - 2, k - 2, l - 2), &
+                                    stress, &
                                     q_cons_vf(mom_idx%beg)%sf(j - 2, k - 2, l - 2), G_local)
                             else
                                 call s_compute_pressure(q_cons_vf(E_idx)%sf(j - 2, k - 2, l - 2), &
