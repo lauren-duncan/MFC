@@ -65,8 +65,8 @@ Ny = 399  # number of elements into y direction
 
 dt = 7.5e-9  # constant time-step - sec
 
-tstop = int(10)
-tframes = int(10)
+tstop = int(5000)
+tframes = int(50)
 # Configuring case dictionary
 print(
     json.dumps(
@@ -178,10 +178,10 @@ print(
             "patch_icpp(4)%alpha(1)": 1.0,
             "patch_icpp(4)%alpha(2)": 0.0,
             # Lagrangian Bubbles
-            "bubbles_lagrange": "F",
+            "bubbles_lagrange": "T",
             "bubble_model": 2,  # Keller-Miksis model
             "Cau_inv": Cau_inv,
-            "lag_params%nBubs_glb": 1000,  # Number of bubbles
+            "lag_params%nBubs_glb": 500,  # Number of bubbles
             "lag_params%solver_approach": 2,
             "lag_params%cluster_type": 2,
             "lag_params%pressure_corrector": "T",
@@ -203,7 +203,7 @@ print(
             # Host medium
             "fluid_pp(1)%gamma": 1.0 / (gamma_host - 1.0),
             "fluid_pp(1)%pi_inf": gamma_host * (pi_inf_host / p0) / (gamma_host - 1.0),
-            #"fluid_pp(1)%Re(1)": Re_inv_host,
+            "fluid_pp(1)%Re(1)": Re_inv_host,
             "fluid_pp(1)%mul0": mu_host,
             "fluid_pp(1)%ss": sigBubble,
             "fluid_pp(1)%pv": pv,
@@ -215,7 +215,7 @@ print(
             # Bubble gas state
             "fluid_pp(2)%gamma": 1.0 / (gamma_g - 1.0),
             "fluid_pp(2)%pi_inf": 0.0e00,
-            #"fluid_pp(2)%Re(1)": Re_inv_gas,
+            "fluid_pp(2)%Re(1)": Re_inv_gas,
             "fluid_pp(2)%gamma_v": gamma_g,
             "fluid_pp(2)%M_v": MW_g,
             "fluid_pp(2)%k_v": k_g,

@@ -656,11 +656,6 @@ contains
 
             end if
 
-            if (bubbles_lagrange) then
-                beta_idx = sys_size + 1
-                sys_size = beta_idx
-            end if
-
             if (mhd) then
                 B_idx%beg = sys_size + 1
                 if (n == 0) then
@@ -782,6 +777,11 @@ contains
                 ! number of entries in the symmetric btensor plus the jacobian
                 b_size = (num_dims*(num_dims + 1))/2 + 1
                 tensor_size = num_dims**2 + 1
+            end if
+
+            if (bubbles_lagrange) then
+                beta_idx = sys_size + 1
+                sys_size = beta_idx
             end if
 
             if (surface_tension) then
