@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3
 import math
 import json
 
@@ -63,10 +63,10 @@ z_virtual = L  # Virtual depth (z direction)
 Nx = 399  # number of elements into x direction
 Ny = 399  # number of elements into y direction
 
-dt = 7.5e-9  # constant time-step - sec
+dt = 5e-9  # constant time-step - sec
 
-tstop = int(5000)
-tframes = int(50)
+tstop = int(700)
+tframes = int(70)
 # Configuring case dictionary
 print(
     json.dumps(
