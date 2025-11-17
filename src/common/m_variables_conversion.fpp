@@ -861,11 +861,12 @@ contains
             end if
         #:endif
 
-        #:call GPU_PARALLEL_LOOP(collapse=3, private='[alpha_K, alpha_rho_K, Re_K, nRtmp, rho_K, gamma_K, pi_inf_K,qv_K, dyn_pres_K, rhoYks, B, T]')
+        #:call GPU_PARALLEL_LOOP(collapse=3, private='[alpha_K, alpha_rho_K, Re_K, nRtmp, rho_K, gamma_K, pi_inf_K,qv_K, dyn_pres_K, rhoYks, B, T, stress]')
             do l = ibounds(3)%beg, ibounds(3)%end
                 do k = ibounds(2)%beg, ibounds(2)%end
                     do j = ibounds(1)%beg, ibounds(1)%end
                         dyn_pres_K = 0._wp
+                        stress = 0._wp
 
                         if (igr) then
                             if (num_fluids == 1) then
@@ -1055,12 +1056,10 @@ contains
                         end if
 
                         if (hypoelasticity) then
-                            $:GPU_LOOP(parallelism='[seq]')
-                            stress = 0._wp
+                            !$:GPU_LOOP(parallelism='[seq]')
                             ! subtracting elastic contribution for pressure calculation
                             if (G_K > verysmall) then
                                 if (cont_damage) G_K = G_K*max((1._wp - qK_cons_vf(damage_idx)%sf(j, k, l)), 0._wp)
-
                                 do i = strxb, strxe
                                     stress = stress + ((qK_prim_vf(i)%sf(j, k, l)**2._wp)/(4._wp*G_K))/gamma_K
                                     ! Double for shear stresses
