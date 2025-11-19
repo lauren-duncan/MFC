@@ -52,13 +52,17 @@ wlen = c_host / freq  # Wavelength - m
 
 # Domain and time set up
 
-L = 1.75
+L = 0.5
 
 xb = -L  # Domain boundaries - m (x direction)
 xe = L
 yb = -L  # Domain boundaries - m (y direction)
 ye = L
 z_virtual = L  # Virtual depth (z direction)
+length_scale = 0.3 # tree radius
+outer_radius = 1.4*length_scale
+xylem_radius = 1.2*length_scale
+inner_radius = 0.8*length_scale
 
 Nx = 399  # number of elements into x direction
 Ny = 399  # number of elements into y direction
@@ -143,7 +147,7 @@ print(
             "patch_icpp(2)%alter_patch(1)": "T",
             "patch_icpp(2)%x_centroid": 0.0,
             "patch_icpp(2)%y_centroid": 0.0,
-            "patch_icpp(2)%radius": 1.4,
+            "patch_icpp(2)%radius": outer_radius,
             "patch_icpp(2)%vel(1)": 0.0,
             "patch_icpp(2)%vel(2)": 0.0,
             "patch_icpp(2)%pres": patm / p0,
@@ -156,7 +160,7 @@ print(
             "patch_icpp(3)%alter_patch(2)": "T",
             "patch_icpp(3)%x_centroid": 0.0,
             "patch_icpp(3)%y_centroid": 0.0,
-            "patch_icpp(3)%radius": 1.2,
+            "patch_icpp(3)%radius": xylem_radius,
             "patch_icpp(3)%vel(1)": 0.0,
             "patch_icpp(3)%vel(2)": 0.0,
             "patch_icpp(3)%pres": patm / p0,
@@ -169,7 +173,7 @@ print(
             "patch_icpp(4)%alter_patch(3)": "T",
             "patch_icpp(4)%x_centroid": 0.0,
             "patch_icpp(4)%y_centroid": 0.0,
-            "patch_icpp(4)%radius": 0.8,
+            "patch_icpp(4)%radius": inner_radius,
             "patch_icpp(4)%vel(1)": 0.0,
             "patch_icpp(4)%vel(2)": 0.0,
             "patch_icpp(4)%pres": patm / p0,
@@ -181,7 +185,7 @@ print(
             "bubbles_lagrange": "T",
             "bubble_model": 2,  # Keller-Miksis model
             "Cau_inv": Cau_inv,
-            "lag_params%nBubs_glb": 500,  # Number of bubbles
+            "lag_params%nBubs_glb": 200,  # Number of bubbles
             "lag_params%solver_approach": 2,
             "lag_params%cluster_type": 2,
             "lag_params%pressure_corrector": "T",
