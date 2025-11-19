@@ -134,7 +134,7 @@ print(
             "patch_icpp(1)%length_y": (ye - yb) / x0,
             "patch_icpp(1)%vel(1)": 0.0,
             "patch_icpp(1)%vel(2)": 0.0,
-            "patch_icpp(1)%pres": patm / p0,
+            "patch_icpp(1)%pres": 0.7 *  patm / p0,
             "patch_icpp(1)%alpha_rho(1)": 0.0,
             "patch_icpp(1)%alpha_rho(2)": rho_gas / rho0,
             "patch_icpp(1)%alpha(1)": 0.0,
@@ -212,7 +212,7 @@ print(
             "fluid_pp(1)%M_v": MW_v,
             "fluid_pp(1)%k_v": k_v,
             "fluid_pp(1)%cp_v": cp_v,
-            "fluid_pp(1)%G": Cau_inv,
+            "fluid_pp(1)%G": 4.596,
             # Bubble gas state
             "fluid_pp(2)%gamma": 1.0 / (gamma_g - 1.0),
             "fluid_pp(2)%pi_inf": 0.0e00,
@@ -225,3 +225,5 @@ print(
         }
     )
 )
+
+
