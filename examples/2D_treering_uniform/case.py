@@ -43,7 +43,8 @@ sigBubble = 0.069  # Surface tension of the bubble - N/m
 mu_g = 1.48e-5
 Re_inv_host = 1.0 / (mu_host / (rho0 * c0 * x0))
 Re_inv_gas = 1.0 / (mu_g / (rho0 * c0 * x0))
-Cau_inv = 5e3 / p0
+G_modulus = 10E3
+Cau_inv = G_modulus / p0
 # Acoustic source properties
 patm = 101325.0  # Atmospheric pressure - Pa
 pamp = 1.0e5  # Amplitude of the acoustic source - Pa
@@ -137,7 +138,7 @@ print(
             "patch_icpp(1)%length_y": (ye - yb) / x0,
             "patch_icpp(1)%vel(1)": 0.0,
             "patch_icpp(1)%vel(2)": 0.0,
-            "patch_icpp(1)%pres": 0.7 *  patm / p0,
+            "patch_icpp(1)%pres": 0.7*patm / p0,
             "patch_icpp(1)%alpha_rho(1)": 0.0,
             "patch_icpp(1)%alpha_rho(2)": rho_gas / rho0,
             "patch_icpp(1)%alpha(1)": 0.0,
@@ -215,7 +216,7 @@ print(
             "fluid_pp(1)%M_v": MW_v,
             "fluid_pp(1)%k_v": k_v,
             "fluid_pp(1)%cp_v": cp_v,
-            "fluid_pp(1)%G": 4.596,
+            "fluid_pp(1)%G": Cau_inv,
             # Bubble gas state
             "fluid_pp(2)%gamma": 1.0 / (gamma_g - 1.0),
             "fluid_pp(2)%pi_inf": 0.0e00,
