@@ -133,7 +133,7 @@ print(
             "patch_icpp(1)%length_y": (ye - yb) / x0,
             "patch_icpp(1)%vel(1)": 0.0,
             "patch_icpp(1)%vel(2)": 0.0,
-            "patch_icpp(1)%pres": patm / p0,
+            "patch_icpp(1)%pres": 0.7 *  patm / p0,
             "patch_icpp(1)%alpha_rho(1)": 0.0,
             "patch_icpp(1)%alpha_rho(2)": rho_gas / rho0,
             "patch_icpp(1)%alpha(1)": 0.0,
