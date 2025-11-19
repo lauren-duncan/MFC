@@ -212,7 +212,7 @@ print(
             "fluid_pp(1)%M_v": MW_v,
             "fluid_pp(1)%k_v": k_v,
             "fluid_pp(1)%cp_v": cp_v,
-            "fluid_pp(1)%G": Cau_inv,
+            "fluid_pp(1)%G": 4.596,
             # Bubble gas state
             "fluid_pp(2)%gamma": 1.0 / (gamma_g - 1.0),
             "fluid_pp(2)%pi_inf": 0.0e00,
@@ -225,3 +225,4 @@ print(
         }
     )
 )
+
