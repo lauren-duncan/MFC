@@ -11,10 +11,10 @@ import numpy as np
 x0 = 1.0  # length - m
 rho0 = 700.0  # density - kg/m3
 patm = 101325.0  # Atmospheric pressure - Pa
-pi_inf_host = 17e9  # Stiffness - Pa
-G_modulus = 1.5E9
+pi_inf_host = 10e9  # Stiffness - Pa
+G_modulus = 1E9
 gamma_host = 2.7466  # Specific heat ratio
-c0 = np.sqrt(gamma_host*(patm+pi_inf_host)/rho0+(0.*4./3.)*G_modulus/rho0)
+c0 = np.sqrt(gamma_host*(patm+pi_inf_host)/rho0+(4./3.)*G_modulus/rho0)
 p0 = rho0 * c0 * c0  # pressure - Pa
 T0 = 298  # temperature - K
 
