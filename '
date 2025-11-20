@@ -9,12 +9,14 @@ import numpy as np
 
 # Reference values for nondimensionalization
 x0 = 1.0  # length - m
-rho0 = 700.0  # density - kg/m3
+rho0 = 500.0  # density - kg/m3
 patm = 101325.0  # Atmospheric pressure - Pa
-pi_inf_host = 17e9  # Stiffness - Pa
-G_modulus = 1.5E9
+young = 10E9
+poisson = 0.5
+pi_inf_host = young/(3.*(1.-2.*poisson))  # Stiffness - Pa
+G_modulus = young/(2.*(1.+poisson))
 gamma_host = 2.7466  # Specific heat ratio
-c0 = np.sqrt(gamma_host*(patm+pi_inf_host)/rho0+(0.*4./3.)*G_modulus/rho0)
+c0 = np.sqrt(gamma_host*(patm+pi_inf_host)/rho0+(4./3.)*G_modulus/rho0)
 p0 = rho0 * c0 * c0  # pressure - Pa
 T0 = 298  # temperature - K
 
@@ -68,7 +70,7 @@ inner_radius = 0.8*length_scale
 Nx = 399  # number of elements into x direction
 Ny = 399  # number of elements into y direction
 
-dt = 1e-12  # constant time-step - sec
+dt = 1e-10  # constant time-step - sec
 
 tstop = int(700)
 tframes = int(70)
