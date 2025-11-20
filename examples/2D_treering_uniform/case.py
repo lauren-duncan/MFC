@@ -14,7 +14,7 @@ patm = 101325.0  # Atmospheric pressure - Pa
 pi_inf_host = 10e9  # Stiffness - Pa
 G_modulus = 1E9
 gamma_host = 2.7466  # Specific heat ratio
-c0 = np.sqrt(gamma_host*(patm+pi_inf_host)/rho0+(4./3.)*G_modulus/rho0)
+c0 = np.sqrt(gamma_host*(patm+pi_inf_host)/rho0)
 p0 = rho0 * c0 * c0  # pressure - Pa
 T0 = 298  # temperature - K
 
@@ -54,7 +54,6 @@ wlen = c_host / freq  # Wavelength - m
 # Domain and time set up
 
 L = 0.5
-
 xb = -L  # Domain boundaries - m (x direction)
 xe = L
 yb = -L  # Domain boundaries - m (y direction)
@@ -68,10 +67,16 @@ inner_radius = 0.8*length_scale
 Nx = 399  # number of elements into x direction
 Ny = 399  # number of elements into y direction
 
-dt = 1e-12  # constant time-step - sec
+# uniform grid
+dx = 2.*L/Nx 
+CFL = 0.9
+dt = CFL * dx / c0
+tfinal = 0.01
+tstop = int(tfinal/dt)
 
-tstop = int(700)
-tframes = int(70)
+nframes = 100.
+tframes = int(tstop/nframes)
+
 # Configuring case dictionary
 print(
     json.dumps(
@@ -88,7 +93,7 @@ print(
             "m": Nx,
             "n": Ny,
             "p": 0,
-            "dt": dt * (c0 / x0),
+            "dt": dt,
             "t_step_start": 0,
             "t_step_stop": tstop,
             "t_step_save": int(tstop / tframes),
@@ -138,7 +143,7 @@ print(
             "patch_icpp(1)%length_y": (ye - yb) / x0,
             "patch_icpp(1)%vel(1)": 0.0,
             "patch_icpp(1)%vel(2)": 0.0,
-            "patch_icpp(1)%pres": 0.7*patm / p0,
+            "patch_icpp(1)%pres": 0.1*patm / p0,
             "patch_icpp(1)%alpha_rho(1)": 0.0,
             "patch_icpp(1)%alpha_rho(2)": rho_gas / rho0,
             "patch_icpp(1)%alpha(1)": 0.0,
@@ -164,7 +169,7 @@ print(
             "patch_icpp(3)%radius": xylem_radius,
             "patch_icpp(3)%vel(1)": 0.0,
             "patch_icpp(3)%vel(2)": 0.0,
-            "patch_icpp(3)%pres": patm / p0,
+            "patch_icpp(3)%pres": 0.7 * patm / p0,
             "patch_icpp(3)%alpha_rho(1)": rho_mid / rho0,
             "patch_icpp(3)%alpha_rho(2)": 0.0,
             "patch_icpp(3)%alpha(1)": 1.0,
