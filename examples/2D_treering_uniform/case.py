@@ -1,7 +1,8 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3
 import math
 import json
 import numpy as np
+
 # Bubble screen
 # Description: A planar acoustic wave interacts with a bubble cloud
 # in water. The background field is modeled in using an Eulerian framework,
@@ -12,12 +13,12 @@ x0 = 1.0e-3  # length - m
 rho0 = 700.0  # density - kg/m3
 patm = 101325.0  # Atmospheric pressure - Pa
 pi_inf_host = 7e9  # Stiffness - Pa
-G_modulus = 7.E7
-gamma_host = 2.  # Specific heat ratio
-c0 = np.sqrt(gamma_host*(patm+pi_inf_host)/rho0)
+G_modulus = 7.0e7
+gamma_host = 2.0  # Specific heat ratio
+c0 = np.sqrt(gamma_host * (patm + pi_inf_host) / rho0)
 p0 = rho0 * c0 * c0  # pressure - Pa
 T0 = 298  # temperature - K
-#print(c0)
+# print(c0)
 # Host properties (water)
 mu_host = 1e-3  # Dynamic viscosity - Pa.s
 c_host = c0  # speed of sound - m/s
@@ -64,15 +65,15 @@ Nx = 399  # number of elements into x direction
 Ny = 399  # number of elements into y direction
 
 # uniform grid
-dx = 2.*L/Nx 
+dx = 2.0 * L / Nx
 z_virtual = L  # Virtual depth (z direction)
-#CFL = 0.8
-dt = 0.0005 #0.009 # CFL * dx / c0
+# CFL = 0.8
+dt = 0.0005  # 0.009 # CFL * dx / c0
 tfinal = 1500 * dt
-tstop = int(tfinal/dt)
+tstop = int(tfinal / dt)
 
-nframes = 200.
-tframes = int(tstop/nframes)
+nframes = 200.0
+tframes = int(tstop / nframes)
 
 # Configuring case dictionary
 print(
@@ -205,4 +206,3 @@ print(
         }
     )
 )
-
