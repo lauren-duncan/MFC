@@ -11,8 +11,8 @@ import numpy as np
 x0 = 1.0e-3  # length - m
 rho0 = 700.0  # density - kg/m3
 patm = 101325.0  # Atmospheric pressure - Pa
-pi_inf_host = 10e9  # Stiffness - Pa
-G_modulus = 1.E8
+pi_inf_host = 3e9  # Stiffness - Pa
+G_modulus = 3.E8
 gamma_host = 3.  # Specific heat ratio
 c0 = np.sqrt(gamma_host*(patm+pi_inf_host)/rho0)
 p0 = rho0 * c0 * c0  # pressure - Pa
@@ -53,12 +53,15 @@ wlen = c_host / freq  # Wavelength - m
 
 # Domain and time set up
 
-L = 2e-3
+L = 5e-4
 xb = -L  # Domain boundaries - m (x direction)
 xe = L
 yb = -L  # Domain boundaries - m (y direction)
 ye = L
-outer_radius = 1.4
+length_scale = 0.3 # tree radius
+outer_radius = 1.4*length_scale
+xylem_radius = 1.2*length_scale
+inner_radius = 0.8*length_scale
 
 Nx = 399  # number of elements into x direction
 Ny = 399  # number of elements into y direction
@@ -66,12 +69,12 @@ Ny = 399  # number of elements into y direction
 # uniform grid
 dx = 2.*L/Nx 
 z_virtual = L  # Virtual depth (z direction)
-#CFL = 0.8
-dt = 0.001 #0.009 # CFL * dx / c0
-tfinal = 2000 * dt
+CFL = 0.9
+dt = CFL * dx / c0
+tfinal = 100 * dt
 tstop = int(tfinal/dt)
 
-nframes = 200.
+nframes = 20.
 tframes = int(tstop/nframes)
 
 # Configuring case dictionary
@@ -100,7 +103,7 @@ print(
             "fd_order": 4,
             "time_stepper": 3,
             "num_fluids": 2,
-            "num_patches": 2,
+            "num_patches": 4,
             "viscous": "T",
             "mpp_lim": "T",
             "weno_order": 5,
@@ -158,6 +161,32 @@ print(
             "patch_icpp(2)%alpha_rho(2)": 0.0,
             "patch_icpp(2)%alpha(1)": 1.0,
             "patch_icpp(2)%alpha(2)": 0.0,
+            # Patch 3: xylem
+            "patch_icpp(3)%geometry": 2,
+            "patch_icpp(3)%alter_patch(2)": "T",
+            "patch_icpp(3)%x_centroid": 0.0,
+            "patch_icpp(3)%y_centroid": 0.0,
+            "patch_icpp(3)%radius": xylem_radius,
+            "patch_icpp(3)%vel(1)": 0.0,
+            "patch_icpp(3)%vel(2)": 0.0,
+            "patch_icpp(3)%pres": patm / p0,
+            "patch_icpp(3)%alpha_rho(1)": rho_mid / rho0,
+            "patch_icpp(3)%alpha_rho(2)": 0.0,
+            "patch_icpp(3)%alpha(1)": 1.0,
+            "patch_icpp(3)%alpha(2)": 0.0,
+            # Patch 4: inner tree
+            "patch_icpp(4)%geometry": 2,
+            "patch_icpp(4)%alter_patch(3)": "T",
+            "patch_icpp(4)%x_centroid": 0.0,
+            "patch_icpp(4)%y_centroid": 0.0,
+            "patch_icpp(4)%radius": inner_radius,
+            "patch_icpp(4)%vel(1)": 0.0,
+            "patch_icpp(4)%vel(2)": 0.0,
+            "patch_icpp(4)%pres": patm / p0,
+            "patch_icpp(4)%alpha_rho(1)": rho_inner / rho0,
+            "patch_icpp(4)%alpha_rho(2)": 0.0,
+            "patch_icpp(4)%alpha(1)": 1.0,
+            "patch_icpp(4)%alpha(2)": 0.0,
             # Lagrangian Bubbles
             "bubbles_lagrange": "T",
             "bubble_model": 2,  # Keller-Miksis model

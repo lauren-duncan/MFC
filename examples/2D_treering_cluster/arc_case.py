@@ -1,32 +1,31 @@
 #!/usr/bin/env python3
 import math
 import json
-import numpy as np
+
 # Bubble screen
 # Description: A planar acoustic wave interacts with a bubble cloud
 # in water. The background field is modeled in using an Eulerian framework,
 # while the bubbles are tracked using a Lagrangian framework.
 
 # Reference values for nondimensionalization
-x0 = 1.0e-3  # length - m
-rho0 = 700.0  # density - kg/m3
-patm = 101325.0  # Atmospheric pressure - Pa
-pi_inf_host = 10e9  # Stiffness - Pa
-G_modulus = 1.E8
-gamma_host = 3.  # Specific heat ratio
-c0 = np.sqrt(gamma_host*(patm+pi_inf_host)/rho0)
+x0 = 1.0  # length - m
+rho0 = 1.0e03  # density - kg/m3
+c0 = 1475.0  # speed of sound - m/s
 p0 = rho0 * c0 * c0  # pressure - Pa
 T0 = 298  # temperature - K
 
 # Host properties (water)
+gamma_host = 2.7466  # Specific heat ratio
+pi_inf_host = 792.02e06  # Stiffness - Pa
 mu_host = 1e-3  # Dynamic viscosity - Pa.s
-c_host = c0  # speed of sound - m/s
+c_host = 1475.0  # speed of sound - m/s
+rho_host = 1000  # density kg/m3
 T_host = 298  # temperature K
 
 # air properties
-rho_outer = rho0  # kg/m^3
-rho_mid = rho0  # kg/m^3
-rho_inner = rho0  # kg/m^3
+rho_outer = 500  # kg/m^3
+rho_mid = 450  # kg/m^3
+rho_inner = 400  # kg/m^3
 rho_gas = 1.225  # kg/m^3
 
 # Lagrangian bubbles' properties
@@ -45,35 +44,30 @@ sigBubble = 0.069  # Surface tension of the bubble - N/m
 mu_g = 1.48e-5
 Re_inv_host = 1.0 / (mu_host / (rho0 * c0 * x0))
 Re_inv_gas = 1.0 / (mu_g / (rho0 * c0 * x0))
-Cau_inv = G_modulus / p0
+Cau_inv = 5e3 / p0
 # Acoustic source properties
+patm = 101325.0  # Atmospheric pressure - Pa
 pamp = 1.0e5  # Amplitude of the acoustic source - Pa
 freq = 300e03  # Source frequency - Hz
 wlen = c_host / freq  # Wavelength - m
 
 # Domain and time set up
 
-L = 2e-3
+L = 1.75
+
 xb = -L  # Domain boundaries - m (x direction)
 xe = L
 yb = -L  # Domain boundaries - m (y direction)
 ye = L
-outer_radius = 1.4
+z_virtual = L  # Virtual depth (z direction)
 
 Nx = 399  # number of elements into x direction
 Ny = 399  # number of elements into y direction
 
-# uniform grid
-dx = 2.*L/Nx 
-z_virtual = L  # Virtual depth (z direction)
-#CFL = 0.8
-dt = 0.001 #0.009 # CFL * dx / c0
-tfinal = 2000 * dt
-tstop = int(tfinal/dt)
+dt = 7.5e-9  # constant time-step - sec
 
-nframes = 200.
-tframes = int(tstop/nframes)
-
+tstop = int(10)
+tframes = int(10)
 # Configuring case dictionary
 print(
     json.dumps(
@@ -90,19 +84,19 @@ print(
             "m": Nx,
             "n": Ny,
             "p": 0,
-            "dt": dt,
+            "dt": dt * (c0 / x0),
             "t_step_start": 0,
             "t_step_stop": tstop,
-            "t_step_save": tframes,
+            "t_step_save": int(tstop / tframes),
             # Simulation Algorithm Parameters
             "model_eqns": 2,
             "hypoelasticity": "T",
             "fd_order": 4,
             "time_stepper": 3,
             "num_fluids": 2,
-            "num_patches": 2,
+            "num_patches": 4,
             "viscous": "T",
-            "mpp_lim": "T",
+            "mpp_lim": "F",
             "weno_order": 5,
             "weno_eps": 1.0e-16,
             "mapped_weno": "T",
@@ -140,7 +134,7 @@ print(
             "patch_icpp(1)%length_y": (ye - yb) / x0,
             "patch_icpp(1)%vel(1)": 0.0,
             "patch_icpp(1)%vel(2)": 0.0,
-            "patch_icpp(1)%pres": patm / p0,
+            "patch_icpp(1)%pres": 0.7 *  patm / p0,
             "patch_icpp(1)%alpha_rho(1)": 0.0,
             "patch_icpp(1)%alpha_rho(2)": rho_gas / rho0,
             "patch_icpp(1)%alpha(1)": 0.0,
@@ -150,7 +144,7 @@ print(
             "patch_icpp(2)%alter_patch(1)": "T",
             "patch_icpp(2)%x_centroid": 0.0,
             "patch_icpp(2)%y_centroid": 0.0,
-            "patch_icpp(2)%radius": outer_radius,
+            "patch_icpp(2)%radius": 1.4,
             "patch_icpp(2)%vel(1)": 0.0,
             "patch_icpp(2)%vel(2)": 0.0,
             "patch_icpp(2)%pres": patm / p0,
@@ -158,11 +152,37 @@ print(
             "patch_icpp(2)%alpha_rho(2)": 0.0,
             "patch_icpp(2)%alpha(1)": 1.0,
             "patch_icpp(2)%alpha(2)": 0.0,
+            # Patch 3: xylem
+            "patch_icpp(3)%geometry": 2,
+            "patch_icpp(3)%alter_patch(2)": "T",
+            "patch_icpp(3)%x_centroid": 0.0,
+            "patch_icpp(3)%y_centroid": 0.0,
+            "patch_icpp(3)%radius": 1.2,
+            "patch_icpp(3)%vel(1)": 0.0,
+            "patch_icpp(3)%vel(2)": 0.0,
+            "patch_icpp(3)%pres": patm / p0,
+            "patch_icpp(3)%alpha_rho(1)": rho_mid / rho0,
+            "patch_icpp(3)%alpha_rho(2)": 0.0,
+            "patch_icpp(3)%alpha(1)": 1.0,
+            "patch_icpp(3)%alpha(2)": 0.0,
+            # Patch 4: inner tree
+            "patch_icpp(4)%geometry": 2,
+            "patch_icpp(4)%alter_patch(3)": "T",
+            "patch_icpp(4)%x_centroid": 0.0,
+            "patch_icpp(4)%y_centroid": 0.0,
+            "patch_icpp(4)%radius": 0.8,
+            "patch_icpp(4)%vel(1)": 0.0,
+            "patch_icpp(4)%vel(2)": 0.0,
+            "patch_icpp(4)%pres": patm / p0,
+            "patch_icpp(4)%alpha_rho(1)": rho_inner / rho0,
+            "patch_icpp(4)%alpha_rho(2)": 0.0,
+            "patch_icpp(4)%alpha(1)": 1.0,
+            "patch_icpp(4)%alpha(2)": 0.0,
             # Lagrangian Bubbles
             "bubbles_lagrange": "T",
             "bubble_model": 2,  # Keller-Miksis model
             "Cau_inv": Cau_inv,
-            "lag_params%nBubs_glb": 200,  # Number of bubbles
+            "lag_params%nBubs_glb": 1000,  # Number of bubbles
             "lag_params%solver_approach": 2,
             "lag_params%cluster_type": 2,
             "lag_params%pressure_corrector": "T",
@@ -183,7 +203,7 @@ print(
             # Fluids Physical Parameters
             # Host medium
             "fluid_pp(1)%gamma": 1.0 / (gamma_host - 1.0),
-            "fluid_pp(1)%pi_inf": gamma_host * ((pi_inf_host) / p0) / (gamma_host - 1.0),
+            "fluid_pp(1)%pi_inf": gamma_host * (pi_inf_host / p0) / (gamma_host - 1.0),
             "fluid_pp(1)%Re(1)": Re_inv_host,
             "fluid_pp(1)%mul0": mu_host,
             "fluid_pp(1)%ss": sigBubble,
@@ -192,7 +212,7 @@ print(
             "fluid_pp(1)%M_v": MW_v,
             "fluid_pp(1)%k_v": k_v,
             "fluid_pp(1)%cp_v": cp_v,
-            "fluid_pp(1)%G": Cau_inv,
+            "fluid_pp(1)%G": 4.596,
             # Bubble gas state
             "fluid_pp(2)%gamma": 1.0 / (gamma_g - 1.0),
             "fluid_pp(2)%pi_inf": 0.0e00,
@@ -205,4 +225,5 @@ print(
         }
     )
 )
+
 

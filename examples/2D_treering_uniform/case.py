@@ -8,25 +8,25 @@ import numpy as np
 # while the bubbles are tracked using a Lagrangian framework.
 
 # Reference values for nondimensionalization
-x0 = 1.0  # length - m
+x0 = 1.0e-3  # length - m
 rho0 = 700.0  # density - kg/m3
 patm = 101325.0  # Atmospheric pressure - Pa
-pi_inf_host = 10e9  # Stiffness - Pa
-G_modulus = 1E9
-gamma_host = 2.7466  # Specific heat ratio
+pi_inf_host = 7e9  # Stiffness - Pa
+G_modulus = 7.E7
+gamma_host = 2.  # Specific heat ratio
 c0 = np.sqrt(gamma_host*(patm+pi_inf_host)/rho0)
 p0 = rho0 * c0 * c0  # pressure - Pa
 T0 = 298  # temperature - K
-
+#print(c0)
 # Host properties (water)
 mu_host = 1e-3  # Dynamic viscosity - Pa.s
 c_host = c0  # speed of sound - m/s
 T_host = 298  # temperature K
 
 # air properties
-rho_outer = 500.0  # kg/m^3
-rho_mid = 500.0  # kg/m^3
-rho_inner = 500.0  # kg/m^3
+rho_outer = rho0  # kg/m^3
+rho_mid = rho0  # kg/m^3
+rho_inner = rho0  # kg/m^3
 rho_gas = 1.225  # kg/m^3
 
 # Lagrangian bubbles' properties
@@ -53,28 +53,25 @@ wlen = c_host / freq  # Wavelength - m
 
 # Domain and time set up
 
-L = 0.5
+L = 2e-3
 xb = -L  # Domain boundaries - m (x direction)
 xe = L
 yb = -L  # Domain boundaries - m (y direction)
 ye = L
-z_virtual = L  # Virtual depth (z direction)
-length_scale = 0.3 # tree radius
-outer_radius = 1.4*length_scale
-xylem_radius = 1.2*length_scale
-inner_radius = 0.8*length_scale
+outer_radius = 1.4
 
 Nx = 399  # number of elements into x direction
 Ny = 399  # number of elements into y direction
 
 # uniform grid
 dx = 2.*L/Nx 
-CFL = 0.9
-dt = CFL * dx / c0
-tfinal = 0.01
+z_virtual = L  # Virtual depth (z direction)
+#CFL = 0.8
+dt = 0.0005 #0.009 # CFL * dx / c0
+tfinal = 1500 * dt
 tstop = int(tfinal/dt)
 
-nframes = 100.
+nframes = 200.
 tframes = int(tstop/nframes)
 
 # Configuring case dictionary
@@ -96,14 +93,14 @@ print(
             "dt": dt,
             "t_step_start": 0,
             "t_step_stop": tstop,
-            "t_step_save": int(tstop / tframes),
+            "t_step_save": tframes,
             # Simulation Algorithm Parameters
             "model_eqns": 2,
             "hypoelasticity": "T",
             "fd_order": 4,
             "time_stepper": 3,
             "num_fluids": 2,
-            "num_patches": 4,
+            "num_patches": 2,
             "viscous": "T",
             "mpp_lim": "T",
             "weno_order": 5,
@@ -143,7 +140,7 @@ print(
             "patch_icpp(1)%length_y": (ye - yb) / x0,
             "patch_icpp(1)%vel(1)": 0.0,
             "patch_icpp(1)%vel(2)": 0.0,
-            "patch_icpp(1)%pres": 0.1*patm / p0,
+            "patch_icpp(1)%pres": patm / p0,
             "patch_icpp(1)%alpha_rho(1)": 0.0,
             "patch_icpp(1)%alpha_rho(2)": rho_gas / rho0,
             "patch_icpp(1)%alpha(1)": 0.0,
@@ -161,32 +158,6 @@ print(
             "patch_icpp(2)%alpha_rho(2)": 0.0,
             "patch_icpp(2)%alpha(1)": 1.0,
             "patch_icpp(2)%alpha(2)": 0.0,
-            # Patch 3: xylem
-            "patch_icpp(3)%geometry": 2,
-            "patch_icpp(3)%alter_patch(2)": "T",
-            "patch_icpp(3)%x_centroid": 0.0,
-            "patch_icpp(3)%y_centroid": 0.0,
-            "patch_icpp(3)%radius": xylem_radius,
-            "patch_icpp(3)%vel(1)": 0.0,
-            "patch_icpp(3)%vel(2)": 0.0,
-            "patch_icpp(3)%pres": 0.7 * patm / p0,
-            "patch_icpp(3)%alpha_rho(1)": rho_mid / rho0,
-            "patch_icpp(3)%alpha_rho(2)": 0.0,
-            "patch_icpp(3)%alpha(1)": 1.0,
-            "patch_icpp(3)%alpha(2)": 0.0,
-            # Patch 4: inner tree
-            "patch_icpp(4)%geometry": 2,
-            "patch_icpp(4)%alter_patch(3)": "T",
-            "patch_icpp(4)%x_centroid": 0.0,
-            "patch_icpp(4)%y_centroid": 0.0,
-            "patch_icpp(4)%radius": inner_radius,
-            "patch_icpp(4)%vel(1)": 0.0,
-            "patch_icpp(4)%vel(2)": 0.0,
-            "patch_icpp(4)%pres": patm / p0,
-            "patch_icpp(4)%alpha_rho(1)": rho_inner / rho0,
-            "patch_icpp(4)%alpha_rho(2)": 0.0,
-            "patch_icpp(4)%alpha(1)": 1.0,
-            "patch_icpp(4)%alpha(2)": 0.0,
             # Lagrangian Bubbles
             "bubbles_lagrange": "T",
             "bubble_model": 2,  # Keller-Miksis model

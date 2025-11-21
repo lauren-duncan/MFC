@@ -154,11 +154,7 @@ contains
 
             if (hypoelasticity .and. present(G)) then
                 ! calculate elastic contribution to Energy
-                pres = ( &
-                       energy - &
-                       dyn_p - &
-                       pi_inf - qv - stress &
-                       )/gamma
+                pres = (energy - dyn_p - pi_inf - qv - stress)/gamma
             end if
 
         #:else
@@ -1072,9 +1068,8 @@ contains
                                                     qK_cons_vf(alf_idx)%sf(j, k, l), &
                                                     dyn_pres_K, pi_inf_K, gamma_K, rho_K, &
                                                     qv_K, rhoYks, pres, T, &
-                                                    qK_cons_vf(strxb)%sf(j, k, l), &
-                                                    stress, &
-                                                    G_K, pres_mag=pres_mag)
+                                                    stress=stress, &
+                                                    G=G_K, pres_mag=pres_mag)
                         else
                             call s_compute_pressure(qK_cons_vf(E_idx)%sf(j, k, l), &
                                                     qK_cons_vf(alf_idx)%sf(j, k, l), &
