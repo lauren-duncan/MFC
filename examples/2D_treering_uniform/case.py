@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3
 import math
 import json
 import numpy as np
@@ -72,7 +72,7 @@ dt = 0.0005  # 0.009 # CFL * dx / c0
 tfinal = 1500 * dt
 tstop = int(tfinal / dt)
 print(dt)
-print(x0/c0)
+print(x0 / c0)
 nframes = 200.0
 tframes = int(tstop / nframes)
 

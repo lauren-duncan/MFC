@@ -29,6 +29,7 @@ option(MFC_SYSCHECK      "Build syscheck"                                    OFF
 option(MFC_DOCUMENTATION "Build documentation"                               OFF)
 option(MFC_ALL           "Build everything"                                  OFF)
 option(MFC_SINGLE_PRECISION "Build single precision"                         OFF)
+option(MFC_MIXED_PRECISION "Build mixed precision"                           OFF)
 
 if (MFC_ALL)
     set(MFC_PRE_PROCESS   ON FORCE)
@@ -41,6 +42,10 @@ if (MFC_SINGLE_PRECISION)
     add_compile_definitions(MFC_SINGLE_PRECISION)
 else()
     add_compile_definitions(MFC_DOUBLE_PRECISION)
+endif()
+
+if (MFC_MIXED_PRECISION)
+    add_compile_definitions(MFC_MIXED_PRECISION)
 endif()
 
 
@@ -196,7 +201,7 @@ elseif ((CMAKE_Fortran_COMPILER_ID STREQUAL "NVHPC") OR (CMAKE_Fortran_COMPILER_
     add_compile_options(
         $<$<COMPILE_LANGUAGE:Fortran>:-Mfreeform>
         $<$<COMPILE_LANGUAGE:Fortran>:-cpp>
-	      $<$<COMPILE_LANGUAGE:Fortran>:-Minfo=inline>
+        $<$<COMPILE_LANGUAGE:Fortran>:-Minfo=inline>
         $<$<COMPILE_LANGUAGE:Fortran>:-Minfo=accel>
     )
 
@@ -474,10 +479,10 @@ function(MFC_SETUP_TARGET)
             endif()
         endif()
 
-				if (ARGS_LAPACK)
-					find_package(LAPACK REQUIRED)
-					target_link_libraries(${a_target} PRIVATE LAPACK::LAPACK)
-				endif()
+        if (ARGS_LAPACK)
+            find_package(LAPACK REQUIRED)
+            target_link_libraries(${a_target} PRIVATE LAPACK::LAPACK)
+        endif()
 
         if ((MFC_OpenACC AND ARGS_OpenACC) OR (MFC_OpenMP AND ARGS_OpenMP))
             if ((MFC_OpenACC AND ARGS_OpenACC))
@@ -573,7 +578,13 @@ function(MFC_SETUP_TARGET)
                 find_package(hipfort COMPONENTS hip CONFIG REQUIRED)
                 target_link_libraries(${a_target} PRIVATE hipfort::hip hipfort::hipfort-amdgcn)
             elseif(CMAKE_Fortran_COMPILER_ID STREQUAL "LLVMFlang")
-                find_package(hipfort COMPONENTS hip CONFIG REQUIRED)
+
+                if (MFC_Unified)
+                    target_compile_options(${ARGS_TARGET}
+                        PRIVATE -DFRONTIER_UNIFIED)
+                endif()
+
+    		find_package(hipfort COMPONENTS hip CONFIG REQUIRED)
                 target_link_libraries(${a_target} PRIVATE hipfort::hip hipfort::hipfort-amdgcn flang_rt.hostdevice)
             endif()
         elseif (CMAKE_Fortran_COMPILER_ID STREQUAL "Cray")
@@ -641,6 +652,18 @@ if (MFC_DOCUMENTATION)
         VERBATIM
     )
 
+    # Generate case_constraints.md from case_validator.py and examples/
+    add_custom_command(
+        OUTPUT  "${CMAKE_CURRENT_SOURCE_DIR}/docs/documentation/case_constraints.md"
+        DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/toolchain/mfc/gen_case_constraints_docs.py"
+                "${CMAKE_CURRENT_SOURCE_DIR}/toolchain/mfc/case_validator.py"
+                "${examples_DOCs}"
+        COMMAND "bash" "${CMAKE_CURRENT_SOURCE_DIR}/docs/gen_constraints.sh"
+                       "${CMAKE_CURRENT_SOURCE_DIR}"
+        COMMENT "Generating case_constraints.md"
+        VERBATIM
+    )
+
     file(GLOB common_DOCs CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/docs/*")
 
     # GEN_DOCS: Given a target name (herein <target>), this macro sets up a
@@ -674,8 +697,10 @@ if (MFC_DOCUMENTATION)
             "${CMAKE_CURRENT_BINARY_DIR}/${target}-Doxyfile" @ONLY)
 
         set(opt_example_dependency "")
+        set(opt_constraints_dependency "")
         if (${target} STREQUAL documentation)
             set(opt_example_dependency "${CMAKE_CURRENT_SOURCE_DIR}/docs/documentation/examples.md")
+            set(opt_constraints_dependency "${CMAKE_CURRENT_SOURCE_DIR}/docs/documentation/case_constraints.md")
         endif()
 
         file(GLOB_RECURSE ${target}_DOCs CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/docs/${target}/*")
@@ -685,6 +710,7 @@ if (MFC_DOCUMENTATION)
             OUTPUT  "${CMAKE_CURRENT_BINARY_DIR}/${target}/html/index.html"
             DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${target}-Doxyfile"
                     "${opt_example_dependency}"
+                    "${opt_constraints_dependency}"
                     "${${target}_SRCs}" "${${target}_DOCs}"
             COMMAND "${DOXYGEN_EXECUTABLE}" "${target}-Doxyfile"
             WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
