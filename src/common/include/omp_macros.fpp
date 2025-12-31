@@ -26,7 +26,7 @@
             #:if MFC_COMPILER == NVIDIA_COMPILER_ID or MFC_COMPILER == PGI_COMPILER_ID
                 #:set default_val = 'defaultmap(tofrom:aggregate) defaultmap(tofrom:allocatable) defaultmap(tofrom:pointer) '
             #:elif MFC_COMPILER == CCE_COMPILER_ID
-                #:set default_val = 'defaultmap(present:aggregate) defaultmap(present:allocatable) defaultmap(present:pointer) '
+                #:set default_val = 'defaultmap(tofrom:aggregate) defaultmap(present:allocatable) defaultmap(present:pointer) '
             #:elif MFC_COMPILER == AMD_COMPILER_ID
                 #:set default_val = ''
             #:else
@@ -149,7 +149,7 @@
     $:omp_end_directive
 #:enddef
 
-#:def OMP_PARALLEL_LOOP(code, collapse=None, private=None, parallelism='[gang, vector]', &
+#:def OMP_PARALLEL_LOOP(collapse=None, private=None, parallelism='[gang, vector]', &
     & default='present', firstprivate=None, reduction=None, reductionOp=None, &
     & copy=None, copyin=None, copyinReadOnly=None, copyout=None, create=None, &
     & no_create=None, present=None, deviceptr=None, attach=None, extraOmpArgs=None)
@@ -178,21 +178,30 @@
 
     #:if MFC_COMPILER == NVIDIA_COMPILER_ID or MFC_COMPILER == PGI_COMPILER_ID
         #:set omp_start_directive = '!$omp target teams loop defaultmap(firstprivate:scalar) bind(teams,parallel) '
-        #:set omp_end_directive = '!$omp end target teams loop'
     #:elif MFC_COMPILER == CCE_COMPILER_ID
         #:set omp_start_directive = '!$omp target teams distribute parallel do simd defaultmap(firstprivate:scalar) '
-        #:set omp_end_directive = '!$omp end target teams distribute parallel do simd'
     #:elif MFC_COMPILER == AMD_COMPILER_ID
         #:set omp_start_directive = '!$omp target teams distribute parallel do '
-        #:set omp_end_directive = '!$omp end target teams distribute parallel do'
     #:else
         #:set omp_start_directive = '!$omp target teams loop defaultmap(firstprivate:scalar) bind(teams,parallel) '
-        #:set omp_end_directive = '!$omp end target teams loop'
     #:endif
 
     #:set omp_directive = omp_start_directive + clause_val + extraOmpArgs_val.strip('\n')
     $:omp_directive
-    $:code
+#:enddef
+
+#:def END_OMP_PARALLEL_LOOP()
+    
+    #:if MFC_COMPILER == NVIDIA_COMPILER_ID or MFC_COMPILER == PGI_COMPILER_ID
+        #:set omp_end_directive = '!$omp end target teams loop'
+    #:elif MFC_COMPILER == CCE_COMPILER_ID
+        #:set omp_end_directive = '!$omp end target teams distribute parallel do simd'
+    #:elif MFC_COMPILER == AMD_COMPILER_ID
+        #:set omp_end_directive = '!$omp end target teams distribute parallel do'
+    #:else
+        #:set omp_end_directive = '!$omp end target teams loop'
+    #:endif
+
     $:omp_end_directive
 #:enddef
 
@@ -337,6 +346,30 @@
 
 #:def UNDEF_AMD(code)
     #:if MFC_COMPILER != AMD_COMPILER_ID
+        $:code
+    #:endif
+#:enddef
+
+#:def DEF_AMD(code)
+    #:if MFC_COMPILER == AMD_COMPILER_ID
+        $:code
+    #:endif
+#:enddef
+
+#:def UNDEF_CCE(code)
+    #:if MFC_COMPILER != CCE_COMPILER_ID
+        $:code
+    #:endif
+#:enddef
+
+#:def DEF_CCE(code)
+    #:if MFC_COMPILER == CCE_COMPILER_ID
+        $:code
+    #:endif
+#:enddef
+
+#:def UNDEF_NVIDIA(code)
+    #:if MFC_COMPILER != NVIDIA_COMPILER_ID and MFC_COMPILER != PGI_COMPILER_ID
         $:code
     #:endif
 #:enddef
