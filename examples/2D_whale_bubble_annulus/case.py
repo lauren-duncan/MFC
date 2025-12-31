@@ -82,7 +82,7 @@ print(
             "precision": 2,
             "prim_vars_wrt": "T",
             "parallel_io": "T",
-            # Patch 1 -- background 
+            # Patch 1
             "patch_icpp(1)%geometry": 3,
             "patch_icpp(1)%x_centroid": 0.0,
             "patch_icpp(1)%y_centroid": 0.0,
@@ -95,7 +95,7 @@ print(
             "patch_icpp(1)%pres": 1.0,
             "patch_icpp(1)%r0": 1.0e00,
             "patch_icpp(1)%v0": 0.0e00,
-            # Patch 2 -- big ring, outer ring
+            # Patch 2
             "patch_icpp(2)%geometry": 2,
             "patch_icpp(2)%alter_patch(1)": "T",
             "patch_icpp(2)%x_centroid": 0.0,
@@ -112,7 +112,7 @@ print(
             "patch_icpp(3)%geometry": 2,
             "patch_icpp(3)%x_centroid": 0.0,
             "patch_icpp(3)%y_centroid": 0.0,
-            "patch_icpp(3)%radius": 1,
+            "patch_icpp(3)%radius": 0.8,
             "patch_icpp(3)%alter_patch(1)": "T",
             "patch_icpp(3)%alter_patch(2)": "T",
             "patch_icpp(3)%alpha_rho(1)": (1 - 1e-12) * 1.0,
@@ -122,21 +122,6 @@ print(
             "patch_icpp(3)%alpha(1)": 1e-12,
             "patch_icpp(3)%r0": 1.0e00,
             "patch_icpp(3)%v0": 0.0e00,
-            # Patch 4 -- heartwood
-            "patch_icpp(3)%geometry": 2,
-            "patch_icpp(3)%x_centroid": 0.0,
-            "patch_icpp(3)%y_centroid": 0.0,
-            "patch_icpp(3)%radius": 0.4,
-            "patch_icpp(3)%alter_patch(1)": "T",
-            "patch_icpp(3)%alter_patch(2)": "T",
-            "patch_icpp(3)%alpha_rho(1)": (1 - vf0) * 1.0,
-            "patch_icpp(3)%vel(1)": 0.00,
-            "patch_icpp(3)%vel(2)": 0.00,
-            "patch_icpp(3)%pres": 1.0,
-            "patch_icpp(3)%alpha(1)": vf0,
-            "patch_icpp(3)%r0": 1.0e00,
-            "patch_icpp(3)%v0": 0.0e00,
-
             # Fluids Physical Parameters
             # Surrounding liquid
             "fluid_pp(1)%gamma": 1.0e00 / (gam_l - 1.0e00),
@@ -166,27 +151,6 @@ print(
             "acoustic(1)%length": 9.0e09,
             "acoustic(1)%wavelength": 0.4,
             "rdma_mpi": "F",
-            
-            # fluid 1 elasticity - background
-            "fluid_pp(1)%gamma": 1.0 / (n_tait - 1.0),
-            "fluid_pp(1)%pi_inf": n_tait * B_tait / (n_tait - 1.0),
-            #fluid 2 elasitcity - outer layer
-            "fluid_pp(2)%gamma":  1.0 / (n_tait - 1.0),
-            "fluid_pp(2)%pi_inf":  n_tait * B_tait / (n_tait - 1.0),
-            "fluid_pp(2)%G": G_tree_outer,
-            #fluid 3 elasticity - inner layer
-            "fluid_pp(3)%gamma": 1.0 / (n_tait - 1.0),
-            "fluid_pp(3)%pi_inf":  n_tait * B_tait / (n_tait - 1.0),
-            "fluid_pp(3)%G": G_tree_inner,
-             #fluid 4 elasticity - heartwood
-            "fluid_pp(3)%gamma": 1.0 / (n_tait - 1.0),
-            "fluid_pp(3)%pi_inf":  n_tait * B_tait / (n_tait - 1.0),
-            "fluid_pp(3)%G": G_tree_heartwood,
-
-
-
         }
-
-
     )
 )
