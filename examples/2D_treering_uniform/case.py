@@ -18,7 +18,7 @@ gamma_host = 2.0  # Specific heat ratio
 c0 = np.sqrt(gamma_host * (patm + pi_inf_host) / rho0)
 p0 = rho0 * c0 * c0  # pressure - Pa
 T0 = 298  # temperature - K
-# print(c0)
+print(c0)
 # Host properties (water)
 mu_host = 1e-3  # Dynamic viscosity - Pa.s
 c_host = c0  # speed of sound - m/s
@@ -71,7 +71,8 @@ z_virtual = L  # Virtual depth (z direction)
 dt = 0.0005  # 0.009 # CFL * dx / c0
 tfinal = 1500 * dt
 tstop = int(tfinal / dt)
-
+print(dt)
+print(x0/c0)
 nframes = 200.0
 tframes = int(tstop / nframes)
 
