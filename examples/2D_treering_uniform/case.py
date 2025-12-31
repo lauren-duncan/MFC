@@ -1,4 +1,6 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3
+
+
 import math
 import json
 import numpy as np
@@ -18,10 +20,9 @@ gamma_host = 2.0  # Specific heat ratio
 c0 = np.sqrt(gamma_host * (patm + pi_inf_host) / rho0)
 p0 = rho0 * c0 * c0  # pressure - Pa
 T0 = 298  # temperature - K
-print(c0)
 # Host properties (water)
 mu_host = 1e-3  # Dynamic viscosity - Pa.s
-c_host = c0  # speed of sound - m/s
+c_host = c0  # speed of sound - m s
 T_host = 298  # temperature K
 
 # air properties
